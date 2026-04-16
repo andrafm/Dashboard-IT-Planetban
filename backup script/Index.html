@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="id" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard IT</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            dark: {
+              900: '#0f172a',
+              800: '#1e293b',
+              700: '#334155',
+              card: '#1e293b'
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    .loader {
+      border: 3px solid rgba(255,255,255,0.3);
+      border-top: 3px solid #3b82f6;
+      border-radius: 50%;
+      width: 20px;
+      height: 20px;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    
+    body, div, nav, header, aside, main {
+      transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+    }
+    
+    .submenu-content {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease-out;
+    }
+    .submenu-content.expanded {
+      max-height: 200px;
+    }
+    .rotate-180 { transform: rotate(180deg); }
+  </style>
+</head>
+<body class="bg-gray-50 text-slate-800 dark:bg-dark-900 dark:text-slate-200 font-sans h-screen flex overflow-hidden">
+
+<!-- ================= VIEW LOGIN ================= -->
+<div id="login-view" class="fixed inset-0 z-10 flex flex-col items-center justify-center bg-gray-100 dark:bg-dark-900 transition-colors">
+  <div class="bg-white dark:bg-dark-800 p-8 rounded-2xl shadow-2xl border border-gray-200 dark:border-slate-700 w-96 transform transition-all">
+    <div class="flex justify-center mb-1">
+      <img src="https://i.imgur.com/FfDVjlF.png"
+           onerror="this.src='https://ui-avatars.com/api/?name=IT+Dash&background=0D8ABC&color=fff&size=100'" 
+           class="w-40 h-auto object-contain rounded-lg shadow-sm" alt="Logo">
+    </div>
+    <h2 class="text-2xl font-bold text-center text-slate-800 dark:text-white mb-1">Dashboard IT</h2>
+    <div id="login-error" class="hidden bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-800 p-3 rounded-lg mb-4 text-sm text-center"></div>
+    <form onsubmit="handleLogin(); return false;">
+      <div class="mb-4">
+        <label class="block text-sm font-semibold mb-2 text-slate-600 dark:text-slate-300">Username</label>
+        <input id="username" type="text" class="w-full px-4 py-2 bg-gray-50 dark:bg-dark-900 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none dark:text-white">
+      </div>
+      <div class="mb-6">
+        <label class="block text-sm font-semibold mb-2 text-slate-600 dark:text-slate-300">Password</label>
+        <input id="password" type="password" class="w-full px-4 py-2 bg-gray-50 dark:bg-dark-900 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none dark:text-white">
+      </div>
+      <button id="btn-login" type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-4 rounded-lg flex justify-center items-center transition-colors">
+        <span id="login-text">Login ke Dashboard</span>
+        <div id="login-loader" class="loader hidden ml-2"></div>
+      </button>
+    </form>
+  </div>
+</div>
+
+<!-- ================= VIEW UTAMA ================= -->
+<div id="app-container" class="hidden flex w-full h-full">
+  <aside class="w-64 bg-white dark:bg-dark-800 border-r border-gray-200 dark:border-slate-700 flex flex-col h-full shrink-0 z-20">
+    <div class="h-16 flex items-center px-4 border-b border-gray-200 dark:border-slate-700">
+      <img src="https://i.imgur.com/FfDVjlF.png" class="h-10 w-15 mr-1" alt="Logo">
+      <h1 class="text-lg font-bold text-slate-800 dark:text-white">IT Panel</h1>
+    </div>
+    <nav class="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+      <button onclick="switchView('view-dashboard')" id="nav-dashboard" class="nav-item w-full flex items-center px-3 py-2.5 rounded-lg text-sm font-medium transition-colors">
+        <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
+        Dashboard
+      </button>
+      <div>
+        <button onclick="toggleMenu('arsip-submenu')" class="w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-700/50">
+          <div class="flex items-center">
+            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path></svg>
+            Manajemen Arsip
+          </div>
+          <svg id="arsip-submenu-icon" class="w-4 h-4 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+        </button>
+        <div id="arsip-submenu" class="submenu-content pl-11 pr-3 flex flex-col gap-1 mt-1">
+          <button onclick="switchView('view-arsip-daftar')" id="nav-arsip-daftar" class="nav-item text-left w-full px-3 py-2 rounded-md text-sm text-slate-500 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-700/50"> Daftar Arsip </button>
+          <button onclick="switchView('view-arsip-input')" id="nav-arsip-input" class="nav-item text-left w-full px-3 py-2 rounded-md text-sm text-slate-500 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-700/50"> Input Arsip </button>
+        </div>
+      </div>
+    </nav>
+    <div class="p-4 border-t border-gray-200 dark:border-slate-700">
+      <div class="flex items-center mb-4 px-2">
+        <div class="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold text-sm mr-3 uppercase" id="user-initial">?</div>
+        <div>
+          <p class="text-sm font-medium text-slate-800 dark:text-white uppercase" id="user-role-display">Role</p>
+          <p class="text-xs text-slate-500 dark:text-slate-400">Terautentikasi</p>
+        </div>
+      </div>
+      <button onclick="logout()" class="w-full flex justify-center items-center px-4 py-2 text-sm font-medium text-red-600 bg-red-50 dark:bg-red-500/10 rounded-lg hover:bg-red-100 transition-colors">
+        Logout
+      </button>
+    </div>
+  </aside>
+
+  <main class="flex-1 flex flex-col h-full overflow-hidden bg-gray-50 dark:bg-dark-900">
+    <header class="h-16 bg-white dark:bg-dark-800 border-b border-gray-200 dark:border-slate-700 flex items-center justify-between px-6 shrink-0">
+      <h2 id="header-title" class="text-xl font-bold text-slate-800 dark:text-white">Dashboard</h2>
+      <button onclick="toggleTheme()" class="p-2 rounded-lg bg-gray-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300">
+        <svg id="icon-sun" class="w-5 h-5 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+        <svg id="icon-moon" class="w-5 h-5 block dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+      </button>
+    </header>
+
+    <div class="flex-1 overflow-y-auto p-6">
+      <div id="notif-bar" class="hidden mb-6 p-4 rounded-lg text-sm text-center font-medium shadow-sm transition-all"></div>
+
+      <!-- ================= KONTEN 1: DASHBOARD ================= -->
+      <div id="view-dashboard" class="view-section block space-y-8">
+        
+        <!-- TOOL TAMBAH AKSES (KHUSUS ADMIN) -->
+        <div id="admin-link-tool" class="hidden bg-white dark:bg-dark-800 p-6 rounded-xl border-2 border-dashed border-blue-200 dark:border-blue-900/50">
+          <h4 class="text-md font-bold text-slate-800 dark:text-white mb-4 flex items-center">
+            <svg class="w-5 h-5 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            [Admin] Tambah Akses Menu Dashboard
+          </h4>
+          <form onsubmit="event.preventDefault(); handleAddLink();" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div class="md:col-span-1">
+              <label class="block text-xs font-bold text-slate-500 mb-1 uppercase">Kategori</label>
+              <select id="link-kategori" required class="w-full bg-gray-50 dark:bg-dark-900 border border-gray-300 dark:border-slate-600 rounded-lg p-2 text-sm dark:text-white">
+                <option value="Sheet">Akses Google Sheets</option>
+                <option value="Maintenance">Maintenance IT</option>
+              </select>
+            </div>
+            <div class="md:col-span-1">
+              <label class="block text-xs font-bold text-slate-500 mb-1 uppercase">Judul Menu</label>
+              <input type="text" id="link-judul" placeholder="Contoh: Log Server" required class="w-full bg-gray-50 dark:bg-dark-900 border border-gray-300 dark:border-slate-600 rounded-lg p-2 text-sm dark:text-white">
+            </div>
+            <div class="md:col-span-1">
+              <label class="block text-xs font-bold text-slate-500 mb-1 uppercase">Deskripsi</label>
+              <input type="text" id="link-desc" placeholder="Keterangan singkat" required class="w-full bg-gray-50 dark:bg-dark-900 border border-gray-300 dark:border-slate-600 rounded-lg p-2 text-sm dark:text-white">
+            </div>
+            <div class="md:col-span-1">
+              <label class="block text-xs font-bold text-slate-500 mb-1 uppercase">URL Target</label>
+              <input type="url" id="link-url" placeholder="https://..." required class="w-full bg-gray-50 dark:bg-dark-900 border border-gray-300 dark:border-slate-600 rounded-lg p-2 text-sm dark:text-white">
+            </div>
+            <div class="md:col-span-4 flex justify-end">
+              <button type="submit" id="btn-add-link" class="bg-blue-600 text-white px-6 py-2 rounded-lg text-sm font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-500/20">Simpan Menu Baru</button>
+            </div>
+          </form>
+        </div>
+
+        <section>
+          <div class="flex items-center mb-4">
+            <div class="w-8 h-8 rounded bg-green-100 dark:bg-green-900/30 flex items-center justify-center mr-3 text-green-600">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+            </div>
+            <h3 class="text-lg font-bold text-slate-800 dark:text-white uppercase tracking-tight">Akses Google Sheets</h3>
+          </div>
+          <div id="sheets-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+        </section>
+
+        <section>
+          <div class="flex items-center mb-4">
+            <div class="w-8 h-8 rounded bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center mr-3 text-orange-600">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path></svg>
+            </div>
+            <h3 class="text-lg font-bold text-slate-800 dark:text-white uppercase tracking-tight">Maintenance Perangkat IT</h3>
+          </div>
+          <div id="maintenance-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+        </section>
+      </div>
+
+      <!-- ================= KONTEN 2: DAFTAR ARSIP ================= -->
+      <div id="view-arsip-daftar" class="view-section hidden">
+        <div class="bg-white dark:bg-dark-800 rounded-xl shadow-sm border border-gray-200 dark:border-slate-700 overflow-hidden">
+          <div class="p-4 bg-gray-50 dark:bg-slate-800/50 border-b flex justify-between items-center">
+            <h3 class="font-bold text-slate-700 dark:text-white">Database Arsip Sistem</h3>
+            <button onclick="loadArchives()" class="text-sm bg-white dark:bg-slate-700 border dark:border-slate-600 px-3 py-1.5 rounded-lg">Refresh</button>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="min-w-full text-left text-sm whitespace-nowrap">
+              <thead class="bg-gray-50 dark:bg-slate-800/80 uppercase text-xs">
+                <tr>
+                  <th class="px-5 py-3 font-semibold">Nama File</th>
+                  <th class="px-5 py-3 font-semibold">Kategori</th>
+                  <th class="px-5 py-3 font-semibold">Keterangan</th>
+                  <th class="px-5 py-3 font-semibold">Tanggal</th>
+                  <th class="px-5 py-3 font-semibold admin-only hidden">Aksi</th>
+                </tr>
+              </thead>
+              <tbody id="archive-table-body" class="divide-y divide-gray-200 dark:divide-slate-700/50"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ================= KONTEN 3: INPUT ARSIP ================= -->
+      <div id="view-arsip-input" class="view-section hidden max-w-3xl mx-auto">
+        <div class="bg-white dark:bg-dark-800 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-slate-700">
+          <h3 class="text-xl font-bold mb-6 text-slate-800 dark:text-white border-b pb-3">Upload Arsip Baru</h3>
+          <!-- ✅ TAMBAH DI SINI (FORM ADMIN) -->
+    <div id="admin-category-tool" class="hidden mb-6 bg-white dark:bg-dark-800 p-5 rounded-xl border border-dashed border-green-300">
+      <h4 class="text-md font-bold text-slate-800 dark:text-white mb-3">
+        [Admin] Tambah Kategori Arsip
+      </h4>
+      
+      <div class="flex gap-3">
+        <input type="text" id="new-category" placeholder="Contoh: Dokumen HRD"
+          class="flex-1 bg-gray-50 dark:bg-dark-900 border border-gray-300 dark:border-slate-600 rounded-lg p-2 text-sm dark:text-white">
+
+        <button onclick="handleAddCategory()"
+          class="bg-green-600 text-white px-4 rounded-lg text-sm font-bold hover:bg-green-700">
+          Tambah
+        </button>
+      </div>
+    </div>
+          <form id="upload-form" onsubmit="event.preventDefault(); handleUpload();">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
+              <div>
+                <label class="block text-sm font-semibold mb-1 text-slate-700 dark:text-slate-300">Nama File</label>
+                <input type="text" id="file-name" required class="w-full bg-gray-50 dark:bg-dark-900 border dark:border-slate-600 rounded-lg p-2.5 text-sm dark:text-white">
+              </div>
+              <div>
+                <label class="block text-sm font-semibold mb-1 text-slate-700 dark:text-slate-300">Kategori</label>
+                <select id="file-category" required class="w-full bg-gray-50 dark:bg-dark-900 border dark:border-slate-600 rounded-lg p-2.5 text-sm dark:text-white"></select>
+              </div>
+            </div>
+            <div class="mb-5">
+              <label class="block text-sm font-semibold mb-1 text-slate-700 dark:text-slate-300">Deskripsi</label>
+              <textarea id="file-desc" required rows="3" class="w-full bg-gray-50 dark:bg-dark-900 border dark:border-slate-600 rounded-lg p-2.5 text-sm dark:text-white"></textarea>
+            </div>
+            <div class="mb-8">
+              <label class="block text-sm font-semibold mb-1 text-slate-700 dark:text-slate-300">Pilih File</label>
+              <input type="file" id="file-upload" required class="w-full text-sm dark:text-white">
+            </div>
+            <button type="submit" id="btn-upload" class="bg-blue-600 text-white px-8 py-3 rounded-lg font-bold hover:bg-blue-700 flex items-center justify-center w-full">
+              <span id="upload-text">Upload ke Drive</span>
+              <div id="upload-loader" class="loader hidden ml-3 border-t-white"></div>
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+  let currentUserRole = '';
+
+  function toggleTheme() {
+    document.documentElement.classList.toggle('dark');
+  }
+
+  function toggleMenu(menuId) {
+    const menu = document.getElementById(menuId);
+    const icon = document.getElementById(menuId + '-icon');
+    menu.classList.toggle('expanded');
+    icon.classList.toggle('rotate-180');
+  }
+
+  function switchView(viewId) {
+
+  // ✅ AUTO BUKA MENU ARSIP
+  if (viewId.includes('arsip')) {
+    const menu = document.getElementById('arsip-submenu');
+    const icon = document.getElementById('arsip-submenu-icon');
+
+    if (menu && !menu.classList.contains('expanded')) {
+      menu.classList.add('expanded');
+      if (icon) icon.classList.add('rotate-180');
+    }
+  }
+
+  // sembunyikan semua view
+  document.querySelectorAll('.view-section')
+    .forEach(el => el.classList.add('hidden'));
+
+  // reset menu aktif
+  document.querySelectorAll('.nav-item')
+    .forEach(el => el.classList.remove(
+      'bg-blue-50',
+      'dark:bg-blue-900/20',
+      'text-blue-700',
+      'dark:text-blue-400',
+      'font-bold'
+    ));
+
+  // tampilkan view aktif
+  const activeView = document.getElementById(viewId);
+  if (activeView) activeView.classList.remove('hidden');
+
+  let headerTitle = 'Dashboard';
+
+  if (viewId === 'view-dashboard') {
+    document.getElementById('nav-dashboard')
+      .classList.add('bg-blue-50','dark:bg-blue-900/20','text-blue-700','dark:text-blue-400');
+    loadLinks();
+  } 
+  else if (viewId === 'view-arsip-daftar') {
+    headerTitle = 'Daftar Arsip';
+    document.getElementById('nav-arsip-daftar')
+      .classList.add('text-blue-700','dark:text-blue-400','font-bold');
+    loadArchives();
+  } 
+  else if (viewId === 'view-arsip-input') {
+    headerTitle = 'Upload Arsip';
+    document.getElementById('nav-arsip-input')
+      .classList.add('text-blue-700','dark:text-blue-400','font-bold');
+    loadCategories();
+  }
+
+  document.getElementById('header-title').innerText = headerTitle;
+}
+
+  function showNotif(message, isSuccess) {
+    const notif = document.getElementById('notif-bar');
+    notif.className = `mb-6 p-4 rounded-lg text-sm text-center font-medium block shadow-sm ${isSuccess ? 'bg-green-100 text-green-800 border-green-200 dark:bg-green-900/30 dark:text-green-400' : 'bg-red-100 text-red-800 border-red-200 dark:bg-red-900/30 dark:text-red-400'}`;
+    notif.innerText = message;
+    setTimeout(() => { notif.classList.add('hidden'); }, 4000);
+  }
+
+  // ================= LOGIC LOGIN =================
+  function handleLogin() {
+    const user = document.getElementById('username').value;
+    const pass = document.getElementById('password').value;
+    const btn = document.getElementById('btn-login');
+    const loader = document.getElementById('login-loader');
+
+    if(!user || !pass) return;
+    btn.disabled = true;
+    loader.classList.remove('hidden');
+
+    if (typeof google !== 'undefined') {
+      google.script.run.withSuccessHandler(function(res) {
+        btn.disabled = false;
+        loader.classList.add('hidden');
+        if(res.success) setupLoginSuccess(res.role, user);
+        else {
+          document.getElementById('login-error').innerText = res.message;
+          document.getElementById('login-error').classList.remove('hidden');
+        }
+      }).checkLogin(user, pass);
+    } else {
+      // Mockup login untuk preview
+      setTimeout(() => {
+        setupLoginSuccess('admin', 'admin');
+        btn.disabled = false; loader.classList.add('hidden');
+      }, 500);
+    }
+  }
+
+  function setupLoginSuccess(role, username) {
+  // NORMALISASI ROLE 🔥
+  currentUserRole = (role === 'admin') ? 'admin' : 'user';
+
+  // SIMPAN SESSION (pakai yang sudah dinormalisasi)
+  const session = {
+    role: currentUserRole,
+    username: username,
+    expired: new Date().getTime() + (24 * 60 * 60 * 1000)
+  };
+  localStorage.setItem('sessionLogin', JSON.stringify(session));
+
+  // RESET UI ADMIN DULU 🔥
+  document.getElementById('admin-link-tool').classList.add('hidden');
+  document.getElementById('admin-category-tool').classList.add('hidden');
+
+  // TAMPILKAN APP
+  document.getElementById('login-view').classList.add('hidden');
+  document.getElementById('app-container').classList.remove('hidden');
+
+  // SET USER INFO
+  document.getElementById('user-role-display').innerText = currentUserRole;
+  document.getElementById('user-initial').innerText = username.charAt(0).toUpperCase();
+
+  // TAMPILKAN ADMIN JIKA PERLU
+  if(currentUserRole === 'admin') {
+    document.getElementById('admin-link-tool').classList.remove('hidden');
+    document.getElementById('admin-category-tool').classList.remove('hidden');
+  }
+
+  // AUTO OPEN MENU
+  const menu = document.getElementById('arsip-submenu');
+  const icon = document.getElementById('arsip-submenu-icon');
+  if (menu) menu.classList.add('expanded');
+  if (icon) icon.classList.add('rotate-180');
+
+  switchView('view-dashboard');
+}
+
+  function logout() {
+  // hapus session
+  localStorage.removeItem('sessionLogin');
+
+  // reset state
+  currentUserRole = '';
+
+  // reset UI admin
+  document.getElementById('admin-link-tool').classList.add('hidden');
+  document.getElementById('admin-category-tool').classList.add('hidden');
+
+  // tampilkan login
+  document.getElementById('login-view').classList.remove('hidden');
+
+  // sembunyikan app
+  document.getElementById('app-container').classList.add('hidden');
+
+  // optional: kosongkan input
+  document.getElementById('username').value = '';
+  document.getElementById('password').value = '';
+}
+
+  // ================= DASHBOARD LINKS =================
+  function loadLinks() {
+    const sheetsContainer = document.getElementById('sheets-container');
+    const maintContainer = document.getElementById('maintenance-container');
+    
+    if (typeof google !== 'undefined') {
+      google.script.run.withSuccessHandler(function(links) {
+        sheetsContainer.innerHTML = '';
+        maintContainer.innerHTML = '';
+        
+        links.forEach(link => {
+          const isAdmin = currentUserRole === 'admin';
+          const delBtn = isAdmin ? `
+            <button onclick="event.preventDefault(); handleDeleteLink('${link.id}')" class="absolute -top-2 -right-2 p-1.5 bg-red-500 text-white rounded-full shadow-lg hover:bg-red-600 transition-all z-10">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+            </button>` : '';
+
+          const card = `
+            <div class="relative group">
+              ${delBtn}
+              <a href="${link.url}" target="_blank" class="block h-full bg-white dark:bg-dark-800 p-5 rounded-xl border border-gray-200 dark:border-slate-700 hover:border-blue-500 dark:hover:border-blue-400 hover:shadow-xl hover:-translate-y-1 transition-all">
+                <p class="font-bold text-slate-800 dark:text-white group-hover:text-blue-600 mb-1">${link.judul}</p>
+                <p class="text-xs text-slate-500 line-clamp-2">${link.deskripsi}</p>
+              </a>
+            </div>`;
+
+          if (link.kategori === 'Sheet') sheetsContainer.innerHTML += card;
+          else maintContainer.innerHTML += card;
+        });
+      }).getLinks();
+    }
+  }
+
+  function handleAddLink() {
+    const kat = document.getElementById('link-kategori').value;
+    const jud = document.getElementById('link-judul').value;
+    const desc = document.getElementById('link-desc').value;
+    const url = document.getElementById('link-url').value;
+    
+    if (typeof google !== 'undefined') {
+      google.script.run.withSuccessHandler(function(res){
+        showNotif(res.message, res.success);
+        if(res.success) {
+          document.getElementById('link-judul').value = '';
+          document.getElementById('link-desc').value = '';
+          document.getElementById('link-url').value = '';
+          loadLinks();
+        }
+      }).addLink(kategori, judul, deskripsi, url, jenis);
+    }
+  }
+
+  function handleDeleteLink(id) {
+    if(!confirm("Hapus akses menu ini?")) return;
+    if (typeof google !== 'undefined') {
+      google.script.run.withSuccessHandler(function(res){
+        showNotif(res.message, res.success);
+        if(res.success) loadLinks();
+      }).deleteLink(id);
+    }
+  }
+
+  // ================= ARSIP =================
+  function loadCategories() {
+    if (typeof google !== 'undefined') {
+      google.script.run.withSuccessHandler(function(cats) {
+        const select = document.getElementById('file-category');
+        select.innerHTML = '<option value="">Pilih Kategori...</option>';
+        cats.forEach(c => select.innerHTML += `<option value="${c}">${c}</option>`);
+      }).getCategories();
+    }
+  }
+
+  function handleUpload() {
+    const fileInput = document.getElementById('file-upload');
+    const file = fileInput.files[0];
+    const name = document.getElementById('file-name').value;
+    const cat = document.getElementById('file-category').value;
+    const desc = document.getElementById('file-desc').value;
+    const btn = document.getElementById('btn-upload');
+
+    if(!file) return;
+    btn.disabled = true;
+    document.getElementById('upload-loader').classList.remove('hidden');
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const ext = file.name.split('.').pop();
+      google.script.run.withSuccessHandler(function(res){
+        btn.disabled = false;
+        document.getElementById('upload-loader').classList.add('hidden');
+        showNotif(res.message, res.success);
+        if(res.success) switchView('view-arsip-daftar');
+      }).uploadFileToDrive(e.target.result, `${name}.${ext}`, cat, desc);
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function loadArchives() {
+  const tbody = document.getElementById('archive-table-body');
+
+  if (typeof google !== 'undefined') {
+    google.script.run.withSuccessHandler(function(data) {
+      tbody.innerHTML = '';
+
+      data.forEach(item => {
+        const isAdmin = currentUserRole === 'admin';
+
+        // 🔥 ambil ekstensi file
+        const ext = item.fileName.split('.').pop().toLowerCase();
+
+        // 🔥 tentukan icon
+        let icon = '';
+        if (ext === 'pdf') {
+          icon = 'https://i.imgur.com/P4kCeh1.png';
+        } else if (ext === 'xls' || ext === 'xlsx') {
+          icon = 'https://i.imgur.com/l2DBUFq.png';
+        } else if (ext === 'doc' || ext === 'docx') {
+          icon = 'https://imgur.com/RuYQnrJ.png';
+        } else {
+          icon = 'https://cdn-icons-png.flaticon.com/512/337/337946.png';
+        }
+
+        // 🔥 link download (Google Drive)
+        const downloadLink = item.url + '&export=download';
+
+        const row = `
+          <tr class="hover:bg-gray-50 dark:hover:bg-slate-800/50">
+            
+            <!-- NAMA FILE + ICON -->
+            <td class="px-5 py-4">
+              <div class="flex items-center gap-3">
+                <img src="${icon}" class="w-6 h-6 object-contain">
+                <span class="font-bold text-slate-800 dark:text-white">
+                  ${item.fileName}
+                </span>
+              </div>
+            </td>
+
+            <td class="px-5 py-4">
+              <span class="px-2 py-1 bg-gray-100 dark:bg-slate-700 rounded text-xs">
+                ${item.kategori}
+              </span>
+            </td>
+
+            <td class="px-5 py-4 text-slate-500">
+              ${item.keterangan}
+            </td>
+
+            <td class="px-5 py-4 text-xs">
+              ${item.timestamp}
+            </td>
+
+            <!-- AKSI -->
+            <td class="px-5 py-4 flex gap-2 ${isAdmin ? '' : ''}">
+              
+              <!-- PREVIEW -->
+             <button onclick="openPreview('${item.url}')"
+               class="bg-blue-500 text-white px-3 py-1 rounded text-xs hover:bg-blue-600">
+                Lihat
+          </button>
+              <!-- DOWNLOAD -->
+              <a href="${downloadLink}"
+                class="bg-green-500 text-white px-3 py-1 rounded text-xs hover:bg-green-600">
+                Download
+              </a>
+
+              ${isAdmin ? `
+                <button onclick="hapusArsip('${item.id}')"
+                  class="bg-red-500 text-white px-3 py-1 rounded text-xs hover:bg-red-600">
+                  Hapus
+                </button>
+              ` : ''}
+
+            </td>
+          </tr>
+        `;
+
+        tbody.innerHTML += row;
+      });
+    }).getArchives();
+  }
+}
+
+  function handleAddCategory() {
+  const input = document.getElementById('new-category');
+  const value = input.value.trim();
+
+  if (!value) {
+    showNotif('Kategori tidak boleh kosong!', false);
+    return;
+  }
+
+  if (typeof google !== 'undefined') {
+    google.script.run.withSuccessHandler(function(res) {
+      showNotif(res.message, res.success);
+
+      if (res.success) {
+        input.value = '';
+        loadCategories(); // reload dropdown
+      }
+    }).addCategory(value);
+  } else {
+    // mockup mode
+    showNotif('Kategori berhasil ditambahkan (mock)', true);
+    input.value = '';
+  }
+}
+
+  function hapusArsip(id) {
+    if(!confirm("Hapus file?")) return;
+    google.script.run.withSuccessHandler(res => {
+      alert(res.message);
+      loadArchives();
+    }).deleteArchive(id);
+  }
+
+  window.onload = () => {
+  const session = localStorage.getItem('sessionLogin');
+
+  if (session) {
+    const data = JSON.parse(session);
+
+    if (new Date().getTime() < data.expired) {
+      setupLoginSuccess(data.role, data.username);
+      return;
+    } else {
+      localStorage.removeItem('sessionLogin');
+    }
+  }
+
+  if(typeof google === 'undefined') {
+    setupLoginSuccess('admin', 'admin');
+  }
+};
+
+
+function openPreview(url) {
+  document.getElementById('preview-frame').src = url;
+  document.getElementById('preview-modal').classList.remove('hidden');
+  document.getElementById('preview-modal').classList.add('flex');
+}
+
+function closePreview() {
+  document.getElementById('preview-frame').src = '';
+  document.getElementById('preview-modal').classList.add('hidden');
+}
+</script>
+
+    <!-- MODAL PREVIEW (PINDAH KE LUAR SCRIPT) -->
+<div id="preview-modal" class="fixed inset-0 bg-black/70 hidden items-center justify-center z-50">
+  <div class="bg-white dark:bg-dark-800 w-11/12 h-5/6 rounded-xl overflow-hidden shadow-xl relative">
+    <div class="flex justify-between items-center p-3 border-b dark:border-slate-700">
+      <h3 class="font-bold text-slate-700 dark:text-white">Preview File</h3>
+      <button onclick="closePreview()" class="text-red-500 font-bold text-lg">✕</button>
+    </div>
+    <iframe id="preview-frame" class="w-full h-full"></iframe>
+  </div>
+</div>
+
+</body>
+</html>

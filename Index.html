@@ -1,0 +1,1002 @@
+<!DOCTYPE html>
+<html lang="id" class="dark">
+<head>
+  <base target="_top">
+  <meta charset="UTF-8">
+  <title>Dashboard IT</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class'
+    }
+  </script>
+
+  <style>
+    .animate-fade-in { animation: fadeIn 0.8s ease-out; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    
+    .nav-btn { transition: all 0.3s ease; }
+    .nav-btn:hover { background: rgba(59, 130, 246, 0.1); transform: translateX(5px); }
+    
+    .card-hover { transition: all 0.3s ease; }
+    .card-hover:hover { transform: translateY(-5px); box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+
+    .form-input {
+      transition: all 0.3s ease;
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.2);
+    }
+    .form-input:focus {
+      background: rgba(255,255,255,0.15);
+      border-color: rgba(59, 130, 246, 0.5);
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+      transform: translateY(-2px);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      transition: all 0.3s ease;
+    }
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+    }
+
+    .table-row {
+      transition: all 0.2s ease;
+    }
+    .table-row:hover {
+      background: rgba(59, 130, 246, 0.05);
+    }
+
+    .rotate-180 {
+      transform: rotate(180deg);
+    }
+  </style>
+</head>
+
+<body class="bg-gray-100 dark:bg-slate-900 text-slate-800 dark:text-white flex h-screen">
+
+<!-- ================= LOGIN VIEW ================= -->
+<div id="login-view" class="fixed inset-0 flex items-center justify-center bg-gradient-to-br from-slate-900 via-slate-800 to-slate-700 animate-fade-in">
+
+  <div class="bg-white/10 backdrop-blur-2xl border border-white/20 shadow-2xl rounded-3xl p-10 w-[420px] transform hover:scale-105 transition-all duration-300">
+
+    <!-- LOGO -->
+    <div class="flex justify-center mb-6">
+      <img src="https://i.imgur.com/FfDVjlF.png"
+           class="w-36 h-auto drop-shadow-2xl animate-pulse"
+           alt="Logo">
+    </div>
+
+    <!-- TITLE -->
+    <h2 class="text-center text-3xl font-bold text-white mb-8 tracking-wide">
+      Dashboard IT
+    </h2>
+
+    <!-- ERROR -->
+    <div id="login-error"
+      class="hidden mb-6 p-4 rounded-xl bg-red-500/30 text-red-200 text-sm text-center border border-red-400/50 animate-bounce">
+    </div>
+
+    <!-- FORM -->
+    <form onsubmit="handleLogin(); return false;" class="space-y-6">
+
+      <div class="relative">
+        <label class="text-sm text-slate-300 font-medium">Username</label>
+        <input id="username" type="text"
+          class="form-input w-full mt-2 px-5 py-3 rounded-xl text-white placeholder-slate-400 focus:outline-none backdrop-blur-sm" style="text-transform: uppercase;">
+      </div>
+
+      <div class="relative">
+        <label class="text-sm text-slate-300 font-medium">Password</label>
+        <input id="password" type="password"
+          class="form-input w-full mt-2 px-5 py-3 rounded-xl text-white placeholder-slate-400 focus:outline-none backdrop-blur-sm" style="text-transform: uppercase;">
+      </div>
+
+      <button type="submit"
+        class="btn-primary w-full text-white font-bold py-3 rounded-xl flex justify-center items-center shadow-lg hover:shadow-xl">
+
+        <span class="mr-2">Login ke Dashboard</span>
+
+        <div id="login-loader"
+          class="hidden ml-2 w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin">
+        </div>
+
+      </button>
+
+    </form>
+
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app-container" class="hidden flex w-full">
+
+  <!-- SIDEBAR -->
+  <aside class="w-64 bg-gradient-to-b from-slate-800 to-slate-900 border-r border-slate-700 p-6 flex flex-col shadow-2xl">
+
+    <!-- HEADER -->
+    <div class="flex items-center mb-8 gap-3">
+      <img src="https://i.imgur.com/FfDVjlF.png" class="w-14 h-auto rounded-2xl shadow-lg border border-white/20" alt="Logo">
+      <div>
+        <h1 class="text-xl font-bold text-white">IT Panel</h1>
+        <p class="text-sm text-slate-300">Admin dashboard</p>
+      </div>
+    </div>
+
+    <!-- USER INFO -->
+    <div class="mb-6 p-3 bg-slate-700/60 rounded-2xl border border-slate-600 shadow-inner">
+      <div class="text-sm text-slate-300">
+        Logged as <span id="user-info" class="text-white font-semibold">Loading...</span>
+      </div>
+    </div>
+
+    <!-- NAV -->
+    <nav class="flex-1 space-y-2">
+      <div class="relative">
+        <button onclick="toggleDashboardDropdown()" class="nav-btn w-full flex items-center px-4 py-3 rounded-xl text-slate-300 hover:text-white">
+          <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z"></path>
+          </svg>
+          Dashboard
+          <svg id="dashboard-chevron" class="w-4 h-4 ml-auto transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+          </svg>
+        </button>
+
+        <div id="dashboard-dropdown" class="hidden ml-8 mt-2 space-y-1">
+          <button onclick="setDashboardCategory('')" class="nav-btn w-full text-left px-4 py-2 rounded-xl text-slate-400 hover:text-white text-sm">Semua Kategori</button>
+        </div>
+      </div>
+
+      <!-- MANAJEMEN ARSIP DROPDOWN -->
+      <div class="relative">
+        <button onclick="toggleArsipDropdown()" class="nav-btn w-full flex items-center px-4 py-3 rounded-xl text-slate-300 hover:text-white">
+          <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+          </svg>
+          Manajemen Arsip
+          <svg id="arsip-chevron" class="w-4 h-4 ml-auto transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+          </svg>
+        </button>
+
+        <div id="arsip-dropdown" class="hidden ml-8 mt-2 space-y-1">
+          <button onclick="switchView('view-arsip-daftar')" class="nav-btn w-full flex items-center px-4 py-2 rounded-xl text-slate-400 hover:text-white text-sm">
+            <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+            </svg>
+            Daftar Arsip
+          </button>
+
+          <button onclick="switchView('view-arsip-input')" class="nav-btn w-full flex items-center px-4 py-2 rounded-xl text-slate-400 hover:text-white text-sm">
+            <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+            </svg>
+            Input Arsip
+          </button>
+        </div>
+      </div>
+    </nav>
+
+    <!-- FOOTER -->
+    <div class="mt-auto space-y-3">
+      <button onclick="toggleTheme()" class="nav-btn w-full flex items-center px-4 py-2 rounded-xl text-slate-400 hover:text-white">
+        <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>
+        </svg>
+        Toggle Theme
+      </button>
+
+      <button onclick="logout()" class="w-full flex items-center px-4 py-2 rounded-xl text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-all">
+        <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+        </svg>
+        Logout
+      </button>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="flex-1 p-8 overflow-auto bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
+
+    <!-- DASHBOARD -->
+    <div id="view-dashboard" class="view-section animate-fade-in">
+      <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-8">
+        <div>
+          <p class="text-sm uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400 mb-2">Dashboard</p>
+          <h2 id="dashboard-selected-category" class="text-3xl font-bold text-slate-800 dark:text-white">Semua Kategori</h2>
+          <p id="dashboard-category-desc" class="text-slate-600 dark:text-slate-400 mt-2">Pilih kategori dari sidebar untuk memfilter link dashboard.</p>
+        </div>
+      </div>
+
+      <div class="flex flex-col gap-3 mb-8">
+        <div class="flex flex-col sm:flex-row gap-3 sm:items-center">
+          <input id="dashboard-search" type="search" placeholder="Cari link, kategori, deskripsi..." oninput="onDashboardSearch()" class="flex-1 px-4 py-3 rounded-2xl border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 text-slate-800 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none" />
+          <button onclick="switchView('view-dashboard')" class="bg-slate-600 hover:bg-slate-700 text-white px-6 py-3 rounded-2xl font-semibold transition-all whitespace-nowrap">
+            Segarkan
+          </button>
+        </div>
+        <div class="flex gap-3 flex-wrap">
+          <button id="manage-dashboard-categories-btn" onclick="toggleManageDashboardCategories()" class="hidden flex-1 sm:flex-auto bg-slate-800 hover:bg-slate-900 text-white px-6 py-3 rounded-2xl font-semibold shadow-lg hover:shadow-xl transition-all">
+            Kelola Kategori
+          </button>
+          <button id="add-link-btn" onclick="showAddLinkForm()" class="hidden flex-1 sm:flex-auto bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-6 py-3 rounded-2xl font-semibold shadow-lg hover:shadow-xl transition-all">
+            Tambah Link
+          </button>
+        </div>
+      </div>
+
+      <!-- MANAGE DASHBOARD CATEGORIES -->
+      <div id="manage-dashboard-categories" class="hidden bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-xl mb-8">
+        <div class="flex justify-between items-center mb-6">
+          <div>
+            <h3 class="text-xl font-bold text-slate-800 dark:text-white">Kelola Kategori Dashboard</h3>
+            <p class="text-sm text-slate-500 dark:text-slate-400">Tambah, ubah, atau hapus kategori dashboard.</p>
+          </div>
+          <button onclick="toggleManageDashboardCategories()" class="text-slate-500 hover:text-slate-900 dark:hover:text-white">Tutup</button>
+        </div>
+        <div id="dashboard-category-list" class="space-y-3 mb-6"></div>
+        <div class="grid md:grid-cols-2 gap-4 items-end">
+          <input id="new-dashboard-category" placeholder="Kategori baru" class="w-full px-4 py-3 border border-slate-300 dark:border-slate-600 rounded-2xl bg-slate-50 dark:bg-slate-700 text-slate-800 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none">
+          <button onclick="addDashboardCategory()" class="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white px-6 py-3 rounded-2xl font-semibold shadow-lg hover:shadow-xl transition-all">
+            Tambah Kategori
+          </button>
+        </div>
+      </div>
+
+      <!-- ADD LINK FORM (ADMIN ONLY) -->
+      <div id="add-link-form" class="hidden bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-xl mb-8">
+        <h3 class="text-xl font-bold mb-6 text-slate-800 dark:text-white">Tambah Link Dashboard</h3>
+        <div class="grid md:grid-cols-2 gap-6 mb-6">
+          <select id="link-category" class="px-4 py-3 border border-slate-300 dark:border-slate-600 rounded-xl bg-slate-50 dark:bg-slate-700 text-slate-800 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none">
+            <option value="">Pilih Kategori</option>
+          </select>
+          <select id="link-type" class="px-4 py-3 border border-slate-300 dark:border-slate-600 rounded-xl bg-slate-50 dark:bg-slate-700 text-slate-800 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none">
+            <option value="">Pilih Jenis</option>
+            <option value="Spreadsheet">Spreadsheet</option>
+            <option value="Form">Form</option>
+            <option value="Tool">Tool</option>
+          </select>
+        </div>
+        <div class="mb-6">
+          <input id="link-title" placeholder="Judul" class="w-full px-4 py-3 border border-slate-300 dark:border-slate-600 rounded-xl bg-slate-50 dark:bg-slate-700 text-slate-800 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none">
+        </div>
+        <div class="mb-6">
+          <input id="link-url" placeholder="URL" class="w-full px-4 py-3 border border-slate-300 dark:border-slate-600 rounded-xl bg-slate-50 dark:bg-slate-700 text-slate-800 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none">
+        </div>
+        <div class="mb-6">
+          <textarea id="link-description" placeholder="Deskripsi" rows="3" class="w-full px-4 py-3 border border-slate-300 dark:border-slate-600 rounded-xl bg-slate-50 dark:bg-slate-700 text-slate-800 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none"></textarea>
+        </div>
+        <div class="flex gap-4 flex-wrap">
+          <button onclick="addLink()" class="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white px-6 py-3 rounded-2xl font-semibold shadow-lg hover:shadow-xl transition-all">
+            Simpan
+          </button>
+          <button onclick="hideAddLinkForm()" class="bg-gray-500 hover:bg-gray-600 text-white px-6 py-3 rounded-2xl font-semibold shadow-lg hover:shadow-xl transition-all">
+            Batal
+          </button>
+        </div>
+      </div>
+
+      <div id="dashboard-links-container" class="grid md:grid-cols-3 gap-4"></div>
+    </div>
+
+    <!-- ARSIP -->
+    <div id="view-arsip-daftar" class="view-section hidden animate-fade-in">
+      <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-8">
+        <div>
+          <h2 class="text-3xl font-bold text-slate-800 dark:text-white">Daftar Arsip</h2>
+          <p class="text-sm text-slate-500 dark:text-slate-400">Cari arsip berdasarkan nama file, kategori, atau keterangan.</p>
+        </div>
+        <input id="archive-search" type="search" placeholder="Cari arsip..." oninput="onArchiveSearch()" class="w-full md:w-80 px-4 py-3 rounded-2xl border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 text-slate-800 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none" />
+      </div>
+
+      <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-xl overflow-hidden">
+        <table class="w-full text-sm">
+          <thead class="bg-gradient-to-r from-slate-700 to-slate-800 text-white">
+            <tr>
+              <th class="px-6 py-4 text-left">Format</th>
+              <th class="px-6 py-4 text-left">Nama File</th>
+              <th class="px-6 py-4 text-left">Kategori</th>
+              <th class="px-6 py-4 text-left">Keterangan</th>
+              <th class="px-6 py-4 text-left">Tanggal</th>
+              <th class="px-6 py-4 text-left">Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="archive-table-body" class="divide-y divide-slate-200 dark:divide-slate-700"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- UPLOAD -->
+    <div id="view-arsip-input" class="view-section hidden animate-fade-in">
+      <h2 class="text-3xl font-bold mb-8 text-slate-800 dark:text-white">Input Arsip</h2>
+
+      <!-- ADD CATEGORY FORM (ADMIN ONLY) -->
+      <div id="add-category-form" class="hidden bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-xl mb-8">
+        <h3 class="text-xl font-bold mb-6 text-slate-800 dark:text-white">Tambah Kategori Baru</h3>
+        <div class="mb-6">
+          <input id="new-category-name" placeholder="Nama Kategori" class="w-full px-4 py-3 border border-slate-300 dark:border-slate-600 rounded-xl bg-slate-50 dark:bg-slate-700 text-slate-800 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none">
+        </div>
+        <div class="flex gap-4">
+          <button onclick="addCategory()" class="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white px-6 py-2 rounded-xl font-bold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all">
+            Tambah Kategori
+          </button>
+          <button onclick="hideAddCategoryForm()" class="bg-gray-500 hover:bg-gray-600 text-white px-6 py-2 rounded-xl font-bold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all">
+            Batal
+          </button>
+        </div>
+      </div>
+
+      <!-- UPLOAD FORM -->
+      <div class="bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-xl">
+        <div class="flex justify-between items-center mb-6">
+          <h3 class="text-xl font-bold text-slate-800 dark:text-white">Upload Arsip Baru</h3>
+          <button id="add-category-btn" onclick="showAddCategoryForm()" class="hidden bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white px-4 py-2 rounded-xl font-bold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all text-sm">
+            + Kategori
+          </button>
+        </div>
+
+        <div class="grid md:grid-cols-2 gap-6 mb-6">
+          <input id="file-name" placeholder="Nama File" class="px-4 py-3 border border-slate-300 dark:border-slate-600 rounded-xl bg-slate-50 dark:bg-slate-700 text-slate-800 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none">
+          <select id="file-category" class="px-4 py-3 border border-slate-300 dark:border-slate-600 rounded-xl bg-slate-50 dark:bg-slate-700 text-slate-800 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none">
+            <option>Pilih Kategori</option>
+          </select>
+        </div>
+        <textarea id="file-desc" placeholder="Deskripsi" rows="4" class="w-full px-4 py-3 border border-slate-300 dark:border-slate-600 rounded-xl bg-slate-50 dark:bg-slate-700 text-slate-800 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none mb-6"></textarea>
+        <input type="file" id="file-upload" class="mb-6">
+
+        <button onclick="handleUpload()" class="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white px-8 py-3 rounded-xl font-bold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all">
+          Upload ke Drive
+        </button>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- PREVIEW -->
+<div id="preview-modal" class="hidden fixed inset-0 bg-black/70 items-center justify-center">
+  <div class="bg-white dark:bg-slate-800 w-11/12 h-5/6 rounded">
+    <div class="flex justify-between p-2 border-b dark:border-slate-700">
+      <span>Preview</span>
+      <button onclick="closePreview()">X</button>
+    </div>
+    <iframe id="preview-frame" class="w-full h-full"></iframe>
+  </div>
+</div>
+
+<script>
+let currentUserRole = '';
+let currentDashboardLinks = [];
+let currentDashboardCategory = '';
+let currentArchives = [];
+let currentDashboardSearchTerm = '';
+let currentDashboardCategories = [];
+const SESSION_KEY = 'itPanelSession';
+
+function el(id){ return document.getElementById(id); }
+
+/* THEME */
+function toggleTheme(){
+  document.documentElement.classList.toggle('dark');
+}
+
+function showLogin(){
+  el('login-view').classList.remove('hidden');
+  el('app-container').classList.add('hidden');
+  el('login-error').classList.add('hidden');
+  el('add-link-btn').classList.add('hidden');
+  el('manage-dashboard-categories-btn').classList.add('hidden');
+  el('add-category-btn').classList.add('hidden');
+  el('add-link-form').classList.add('hidden');
+  el('manage-dashboard-categories').classList.add('hidden');
+}
+
+function saveSession(username, role){
+  const now = new Date();
+  const expiry = new Date(now.getTime() + 8 * 60 * 60 * 1000);
+  const data = {
+    username,
+    role,
+    expiry: expiry.toISOString(),
+    date: now.toISOString().split('T')[0]
+  };
+  localStorage.setItem(SESSION_KEY, JSON.stringify(data));
+}
+
+function getSession(){
+  const raw = localStorage.getItem(SESSION_KEY);
+  if(!raw) return null;
+
+  try {
+    const session = JSON.parse(raw);
+    const now = new Date();
+    const today = now.toISOString().split('T')[0];
+
+    if(session.date !== today) {
+      localStorage.removeItem(SESSION_KEY);
+      return null;
+    }
+
+    const expiry = new Date(session.expiry);
+    if(isNaN(expiry) || expiry < now){
+      localStorage.removeItem(SESSION_KEY);
+      return null;
+    }
+
+    return session;
+  } catch (e) {
+    localStorage.removeItem(SESSION_KEY);
+    return null;
+  }
+}
+
+function clearSession(){
+  localStorage.removeItem(SESSION_KEY);
+}
+
+function setupLogin(username, role, skipSave) {
+  if(!skipSave) saveSession(username, role);
+
+  currentUserRole = role;
+  el('login-view').classList.add('hidden');
+  el('app-container').classList.remove('hidden');
+  el('user-info').textContent = username.toUpperCase() + ' (' + role.toUpperCase() + ')';
+
+  if(role === 'admin'){
+    el('add-link-btn').classList.remove('hidden');
+    el('manage-dashboard-categories-btn').classList.remove('hidden');
+    el('add-category-btn').classList.remove('hidden');
+  } else {
+    el('add-link-btn').classList.add('hidden');
+    el('manage-dashboard-categories-btn').classList.add('hidden');
+    el('add-category-btn').classList.add('hidden');
+  }
+
+  loadDashboardCategories();
+  loadCategories();
+  switchView('view-dashboard');
+}
+
+function handleLogin(){
+  const user = el('username').value.trim();
+  const pass = el('password').value.trim();
+
+  if(!user || !pass){
+    el('login-error').textContent = 'Username dan password tidak boleh kosong.';
+    el('login-error').classList.remove('hidden');
+    return;
+  }
+
+  if(typeof google !== 'undefined'){
+    google.script.run.withSuccessHandler(function(res){
+      if(res.success){
+        setupLogin(user, res.role);
+      } else {
+        el('login-error').textContent = res.message;
+        el('login-error').classList.remove('hidden');
+      }
+    }).checkLogin(user, pass);
+  } else {
+    setupLogin(user, 'admin');
+  }
+}
+
+function logout(){
+  clearSession();
+  el('login-view').classList.remove('hidden');
+  el('app-container').classList.add('hidden');
+  el('username').value = '';
+  el('password').value = '';
+  el('login-error').classList.add('hidden');
+}
+
+function initApp(){
+  const session = getSession();
+  if(session){
+    setupLogin(session.username, session.role, true);
+  } else {
+    showLogin();
+  }
+}
+
+/* DROPDOWN */
+function toggleArsipDropdown(){
+  const dropdown = el('arsip-dropdown');
+  const chevron = el('arsip-chevron');
+
+  if(dropdown.classList.contains('hidden')){
+    dropdown.classList.remove('hidden');
+    chevron.classList.add('rotate-180');
+  } else {
+    dropdown.classList.add('hidden');
+    chevron.classList.remove('rotate-180');
+  }
+}
+
+/* DASHBOARD LINKS */
+function toggleDashboardDropdown(){
+  const dropdown = el('dashboard-dropdown');
+  const chevron = el('dashboard-chevron');
+
+  if(dropdown.classList.contains('hidden')){
+    dropdown.classList.remove('hidden');
+    chevron.classList.add('rotate-180');
+  } else {
+    dropdown.classList.add('hidden');
+    chevron.classList.remove('rotate-180');
+  }
+}
+
+function onDashboardSearch(){
+  currentDashboardSearchTerm = el('dashboard-search').value.trim().toLowerCase();
+  displayDashboardLinks(currentDashboardCategory);
+}
+
+function showAddLinkForm(){
+  el('add-link-form').classList.remove('hidden');
+}
+
+function hideAddLinkForm(){
+  el('add-link-form').classList.add('hidden');
+  el('link-category').value = '';
+  el('link-type').value = '';
+  el('link-title').value = '';
+  el('link-url').value = '';
+  el('link-description').value = '';
+}
+
+function addLink(){
+  const category = el('link-category').value;
+  const title = el('link-title').value.trim();
+  const url = el('link-url').value.trim();
+  const description = el('link-description').value.trim();
+  const type = el('link-type').value;
+
+  if(!category || !title || !url || !description || !type){
+    alert('Semua field harus diisi!');
+    return;
+  }
+
+  if(typeof google !== 'undefined'){
+    google.script.run.withSuccessHandler(function(res){
+      if(res && res.success){
+        hideAddLinkForm();
+        loadLinks();
+        alert(res.message);
+      } else {
+        alert(res.message || 'Gagal menambahkan link.');
+      }
+    }).addLink(category, title, description, url, type);
+  }
+}
+
+function toggleManageDashboardCategories(){
+  const panel = el('manage-dashboard-categories');
+  if(panel.classList.contains('hidden')){
+    panel.classList.remove('hidden');
+  } else {
+    panel.classList.add('hidden');
+  }
+}
+
+function setDashboardCategory(category){
+  currentDashboardCategory = category ? decodeURIComponent(category) : '';
+  displayDashboardLinks(currentDashboardCategory);
+  switchView('view-dashboard');
+}
+
+function displayDashboardLinks(category){
+  const container = el('dashboard-links-container');
+  const selectedTitle = el('dashboard-selected-category');
+  const desc = el('dashboard-category-desc');
+
+  let links = currentDashboardLinks.slice();
+  if(category){
+    links = links.filter(l => l.kategori === category);
+  }
+
+  if(currentDashboardSearchTerm){
+    links = links.filter(l => {
+      const query = currentDashboardSearchTerm;
+      return l.judul.toLowerCase().includes(query)
+        || l.deskripsi.toLowerCase().includes(query)
+        || l.kategori.toLowerCase().includes(query)
+        || l.jenis.toLowerCase().includes(query);
+    });
+  }
+
+  if(category){
+    selectedTitle.textContent = category;
+    desc.textContent = currentDashboardSearchTerm ? 'Hasil pencarian untuk "' + currentDashboardSearchTerm + '" di kategori ' + category + '.' : 'Menampilkan link untuk kategori ' + category + '.';
+  } else {
+    selectedTitle.textContent = 'Semua Kategori';
+    desc.textContent = currentDashboardSearchTerm ? 'Hasil pencarian untuk "' + currentDashboardSearchTerm + '" di semua kategori.' : 'Pilih kategori dari sidebar untuk memfilter link dashboard.';
+  }
+
+  if(!links.length){
+    container.innerHTML = '<div class="col-span-full bg-white dark:bg-slate-800 rounded-2xl p-8 shadow-xl text-slate-500 dark:text-slate-400">Tidak ditemukan link untuk filter ini.</div>';
+    return;
+  }
+
+  if(!category){
+    const grouped = {};
+    links.forEach(link => {
+      grouped[link.kategori] = grouped[link.kategori] || [];
+      grouped[link.kategori].push(link);
+    });
+
+    let html = '';
+    const sortedCategories = currentDashboardCategories.slice().sort((a, b) => {
+      const indexA = currentDashboardCategories.indexOf(a);
+      const indexB = currentDashboardCategories.indexOf(b);
+      return indexA - indexB;
+    });
+    sortedCategories.forEach(function(group){
+      if(!grouped[group]) return;
+      html += '<div class="col-span-full">';
+      html += '<div class="mb-3 flex items-center justify-between">';
+      html += '<h3 class="text-lg font-semibold text-slate-800 dark:text-white">' + group + '</h3>';
+      html += '</div>';
+      html += '<div class="grid gap-4 md:grid-cols-3">';
+
+      grouped[group].forEach(function(link){
+        html += renderDashboardLinkCard(link);
+      });
+
+      html += '</div></div>';
+    });
+
+    container.innerHTML = html;
+    return;
+  }
+
+  let html = '';
+  links.forEach(function(link){
+    html += renderDashboardLinkCard(link);
+  });
+  container.innerHTML = html;
+}
+
+function renderDashboardLinkCard(link){
+  return '<a href="' + link.url + '" target="_blank" class="block bg-white dark:bg-slate-800 p-4 rounded-xl shadow-md hover:shadow-lg transition-shadow border border-slate-200 dark:border-slate-700 group">'
+    + '<div class="mb-2">'
+    + '<div class="text-xs uppercase tracking-widest text-slate-400 dark:text-slate-500">' + link.jenis + '</div>'
+    + '<h4 class="text-sm font-semibold text-slate-800 dark:text-white mt-1 line-clamp-2 group-hover:text-blue-600 dark:group-hover:text-blue-400">' + link.judul + '</h4>'
+    + '</div>'
+    + '<p class="text-xs text-slate-600 dark:text-slate-400 mb-2 line-clamp-2">' + link.deskripsi + '</p>'
+    + '<span class="inline-flex items-center text-xs font-medium bg-blue-600 group-hover:bg-blue-700 text-white px-2 py-1 rounded-lg transition-colors">'
+    + 'Buka →'
+    + '</span>'
+    + '</a>';
+}
+
+function loadDashboardCategories(){
+  if(typeof google === 'undefined'){
+    const categories = ['Google Sheets','Maintenance'];
+    currentDashboardCategories = categories;
+    populateLinkCategorySelect(categories);
+    renderDashboardCategoryDropdown(categories);
+    renderDashboardCategoryList(categories);
+    loadLinks();
+    return;
+  }
+
+  google.script.run.withSuccessHandler(function(categories){
+    currentDashboardCategories = categories;
+    populateLinkCategorySelect(categories);
+    renderDashboardCategoryDropdown(categories);
+    renderDashboardCategoryList(categories);
+    loadLinks();
+  }).getDashboardCategories();
+}
+
+function populateLinkCategorySelect(categories){
+  const select = el('link-category');
+  if(!select) return;
+  select.innerHTML = '<option value="">Pilih Kategori</option>';
+  categories.forEach(function(cat){
+    select.innerHTML += '<option value="' + cat + '">' + cat + '</option>';
+  });
+}
+
+function renderDashboardCategoryDropdown(categories){
+  const dropdown = el('dashboard-dropdown');
+  if(!dropdown) return;
+
+  let html = '<button onclick="setDashboardCategory(\'\')" class="nav-btn w-full text-left px-4 py-2 rounded-xl text-slate-400 hover:text-white text-sm">Semua Kategori</button>';
+  categories.forEach(function(cat){
+    const encoded = encodeURIComponent(cat);
+    html += '<button onclick="setDashboardCategory(\'' + encoded + '\')" class="nav-btn w-full text-left px-4 py-2 rounded-xl text-slate-400 hover:text-white text-sm">' + cat + '</button>';
+  });
+  dropdown.innerHTML = html;
+}
+
+function renderDashboardCategoryList(categories){
+  const list = el('dashboard-category-list');
+  if(!list) return;
+
+  if(!categories.length){
+    list.innerHTML = '<div class="rounded-2xl bg-slate-50 dark:bg-slate-900 p-4 text-slate-500 dark:text-slate-400">Belum ada kategori dashboard.</div>';
+    return;
+  }
+
+  let html = '';
+  categories.forEach(function(cat, index){
+    const encoded = encodeURIComponent(cat);
+    html += '<div class="flex items-center justify-between gap-4 rounded-2xl border border-slate-200 dark:border-slate-700 p-4">';
+    html += '<div class="text-slate-800 dark:text-white font-medium">' + cat + '</div>';
+    html += '<div class="flex gap-2">';
+    html += '<button onclick="moveDashboardCategoryUp(\'' + encoded + '\')" class="px-3 py-2 rounded-2xl bg-blue-500 text-white text-sm hover:bg-blue-600 transition" ' + (index === 0 ? 'disabled' : '') + '>↑</button>';
+    html += '<button onclick="moveDashboardCategoryDown(\'' + encoded + '\')" class="px-3 py-2 rounded-2xl bg-blue-500 text-white text-sm hover:bg-blue-600 transition" ' + (index === categories.length - 1 ? 'disabled' : '') + '>↓</button>';
+    html += '<button onclick="editDashboardCategory(\'' + encoded + '\')" class="px-3 py-2 rounded-2xl bg-slate-800 text-white text-sm hover:bg-slate-900 transition">Ubah</button>';
+    html += '<button onclick="removeDashboardCategory(\'' + encoded + '\')" class="px-3 py-2 rounded-2xl bg-red-500 text-white text-sm hover:bg-red-600 transition">Hapus</button>';
+    html += '</div></div>';
+  });
+  list.innerHTML = html;
+}
+
+function addDashboardCategory(){
+  const newCategory = el('new-dashboard-category').value.trim();
+  if(!newCategory){
+    alert('Nama kategori tidak boleh kosong!');
+    return;
+  }
+
+  if(typeof google !== 'undefined'){
+    google.script.run.withSuccessHandler(function(res){
+      if(res.success){
+        el('new-dashboard-category').value = '';
+        loadDashboardCategories();
+        alert(res.message);
+      } else {
+        alert(res.message);
+      }
+    }).addDashboardCategory(newCategory);
+  }
+}
+
+function editDashboardCategory(encodedCategory){
+  const category = decodeURIComponent(encodedCategory);
+  const newCategory = prompt('Ubah kategori dashboard', category);
+  if(!newCategory || newCategory.trim() === category) return;
+
+  if(typeof google !== 'undefined'){
+    google.script.run.withSuccessHandler(function(res){
+      if(res.success){
+        loadDashboardCategories();
+        alert(res.message);
+      } else {
+        alert(res.message);
+      }
+    }).updateDashboardCategory(category, newCategory.trim());
+  }
+}
+
+function removeDashboardCategory(encodedCategory){
+  const category = decodeURIComponent(encodedCategory);
+  if(!confirm('Hapus kategori "' + category + '"?')) return;
+
+  if(typeof google !== 'undefined'){
+    google.script.run.withSuccessHandler(function(res){
+      if(res.success){
+        loadDashboardCategories();
+        alert(res.message);
+      } else {
+        alert(res.message);
+      }
+    }).deleteDashboardCategory(category);
+  }
+}
+
+function moveDashboardCategoryUp(encodedCategory){
+  const category = decodeURIComponent(encodedCategory);
+
+  if(typeof google !== 'undefined'){
+    google.script.run.withSuccessHandler(function(res){
+      if(res.success){
+        loadDashboardCategories();
+        alert(res.message);
+      } else {
+        alert(res.message);
+      }
+    }).moveDashboardCategoryUp(category);
+  }
+}
+
+function moveDashboardCategoryDown(encodedCategory){
+  const category = decodeURIComponent(encodedCategory);
+
+  if(typeof google !== 'undefined'){
+    google.script.run.withSuccessHandler(function(res){
+      if(res.success){
+        loadDashboardCategories();
+        alert(res.message);
+      } else {
+        alert(res.message);
+      }
+    }).moveDashboardCategoryDown(category);
+  }
+}
+
+/* NAV */
+function switchView(v){
+  document.querySelectorAll('.view-section')
+    .forEach(x=>x.classList.add('hidden'));
+
+  el(v).classList.remove('hidden');
+
+  if(v === 'view-dashboard') loadLinks();
+  if(v === 'view-arsip-daftar') loadArchives();
+  if(v === 'view-arsip-input') loadCategories();
+}
+
+/* LINKS */
+function loadLinks(){
+  if(typeof google === 'undefined'){
+    displayDashboardLinks(currentDashboardCategory);
+    return;
+  }
+
+  google.script.run.withSuccessHandler(function(data){
+    currentDashboardLinks = data;
+    displayDashboardLinks(currentDashboardCategory);
+  }).getLinks();
+}
+
+/* DRIVE */
+function previewUrl(url){
+  const id = url.match(/[-\w]{25,}/);
+  return id ? "https://drive.google.com/file/d/"+id[0]+"/preview" : url;
+}
+
+function downloadUrl(url){
+  const id = url.match(/[-\w]{25,}/);
+  return id ? "https://drive.google.com/uc?export=download&id="+id[0] : url;
+}
+
+/* ARSIP */
+function getArchiveIcon(fileName){
+  const ext = fileName.split('.').pop().toLowerCase();
+  switch(ext){
+    case 'pdf': return 'PDF';
+    case 'xls':
+    case 'xlsx': return 'XLS';
+    case 'doc':
+    case 'docx': return 'DOC';
+    case 'ppt':
+    case 'pptx': return 'PPT';
+    case 'zip':
+    case 'rar':
+    case '7z': return 'ZIP';
+    case 'png':
+    case 'jpg':
+    case 'jpeg':
+    case 'gif': return 'IMG';
+    case 'txt': return 'TXT';
+    default: return 'FILE';
+  }
+}
+
+function loadArchives(){
+  if(typeof google === 'undefined') return;
+
+  google.script.run.withSuccessHandler(function(data){
+    currentArchives = data || [];
+    renderArchiveTable(currentArchives);
+  }).getArchives();
+}
+
+function renderArchiveTable(data){
+  const html = data.map(function(d){
+    const p = previewUrl(d.url);
+    const dl = downloadUrl(d.url);
+    const label = getArchiveIcon(d.fileName);
+
+    return '<tr class="table-row">'
+      + '<td class="px-6 py-4"><span class="inline-flex items-center justify-center w-12 h-12 rounded-lg bg-slate-100 dark:bg-slate-700 text-xs font-bold text-slate-600 dark:text-slate-300">' + label + '</span></td>'
+      + '<td class="px-6 py-4">' + d.fileName + '</td>'
+      + '<td class="px-6 py-4">' + d.kategori + '</td>'
+      + '<td class="px-6 py-4">' + d.keterangan + '</td>'
+      + '<td class="px-6 py-4">' + d.timestamp + '</td>'
+      + '<td class="px-6 py-4">'
+      + '<button onclick="openPreview(\'' + p + '\')" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded-lg mr-2 transition-colors">Preview</button>'
+      + '<a href="' + dl + '" class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded-lg transition-colors">Download</a>'
+      + '</td></tr>';
+  }).join('');
+
+  el('archive-table-body').innerHTML = html;
+}
+
+function onArchiveSearch(){
+  const term = el('archive-search').value.trim().toLowerCase();
+  const filtered = currentArchives.filter(function(d){
+    return d.fileName.toLowerCase().includes(term)
+      || d.kategori.toLowerCase().includes(term)
+      || d.keterangan.toLowerCase().includes(term);
+  });
+
+  renderArchiveTable(filtered);
+}
+
+function loadCategories(){
+  if(typeof google==='undefined') return;
+
+  google.script.run.withSuccessHandler(function(categories){
+    const select = el('file-category');
+    select.innerHTML = '<option>Pilih Kategori</option>';
+
+    categories.forEach(function(cat){
+      select.innerHTML += '<option value="' + cat + '">' + cat + '</option>';
+    });
+  }).getCategories();
+}
+
+/* CATEGORY MANAGEMENT */
+function showAddCategoryForm(){
+  el('add-category-form').classList.remove('hidden');
+}
+
+function hideAddCategoryForm(){
+  el('add-category-form').classList.add('hidden');
+  el('new-category-name').value = '';
+}
+
+function addCategory(){
+  const categoryName = el('new-category-name').value.trim();
+
+  if(!categoryName){
+    alert('Nama kategori tidak boleh kosong!');
+    return;
+  }
+
+  if(typeof google !== 'undefined'){
+    google.script.run.withSuccessHandler(function(){
+      hideAddCategoryForm();
+      loadCategories();
+      alert('Kategori berhasil ditambahkan!');
+    }).addCategory(categoryName);
+  }
+}
+
+/* UPLOAD */
+function handleUpload(){
+  const file = el('file-upload').files[0];
+  if(!file) return;
+
+  const reader = new FileReader();
+
+  reader.onload = function(e){
+    google.script.run.uploadFileToDrive(
+      e.target.result,
+      file.name,
+      el('file-category').value || 'General',
+      el('file-desc').value
+    );
+    alert('Upload berhasil');
+  };
+
+  reader.readAsDataURL(file);
+}
+
+/* PREVIEW */
+function openPreview(url){
+  el('preview-frame').src = url;
+  el('preview-modal').classList.remove('hidden');
+  el('preview-modal').classList.add('flex');
+}
+
+function closePreview(){
+  el('preview-frame').src='';
+  el('preview-modal').classList.add('hidden');
+}
+
+window.addEventListener('DOMContentLoaded', initApp);
+</script>
+
+</body>
+</html>
