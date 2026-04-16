@@ -137,6 +137,18 @@ function updateDashboardCategory(oldName, newName) {
   }
 
   if (!updated) return { success: false, message: 'Kategori tidak ditemukan.' };
+
+  // Update kategori di Links sheet
+  const linksSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Links');
+  if (linksSheet) {
+    const linksData = linksSheet.getDataRange().getValues();
+    for (let i = 1; i < linksData.length; i++) {
+      if (linksData[i][1] === oldName) {
+        linksSheet.getRange(i + 1, 2).setValue(newName);
+      }
+    }
+  }
+
   return { success: true, message: 'Kategori berhasil diperbarui!' };
 }
 
@@ -153,52 +165,6 @@ function deleteDashboardCategory(name) {
   }
 
   return { success: false, message: 'Kategori tidak ditemukan.' };
-}
-
-function moveDashboardCategoryUp(name) {
-  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('DashboardCategories');
-  if (!sheet) return { success: false, message: 'Sheet kategori tidak ditemukan.' };
-
-  const data = sheet.getDataRange().getValues();
-  let currentIndex = -1;
-  for (let i = 1; i < data.length; i++) {
-    if (data[i][0] === name) {
-      currentIndex = i;
-      break;
-    }
-  }
-  if (currentIndex <= 1) return { success: false, message: 'Kategori sudah di posisi teratas.' };
-
-  // Swap orders
-  const currentOrder = data[currentIndex][1];
-  const aboveOrder = data[currentIndex - 1][1];
-  sheet.getRange(currentIndex + 1, 2).setValue(aboveOrder);
-  sheet.getRange(currentIndex, 2).setValue(currentOrder);
-
-  return { success: true, message: 'Kategori berhasil dipindahkan ke atas.' };
-}
-
-function moveDashboardCategoryDown(name) {
-  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('DashboardCategories');
-  if (!sheet) return { success: false, message: 'Sheet kategori tidak ditemukan.' };
-
-  const data = sheet.getDataRange().getValues();
-  let currentIndex = -1;
-  for (let i = 1; i < data.length; i++) {
-    if (data[i][0] === name) {
-      currentIndex = i;
-      break;
-    }
-  }
-  if (currentIndex === -1 || currentIndex >= data.length - 1) return { success: false, message: 'Kategori sudah di posisi terbawah.' };
-
-  // Swap orders
-  const currentOrder = data[currentIndex][1];
-  const belowOrder = data[currentIndex + 1][1];
-  sheet.getRange(currentIndex + 1, 2).setValue(belowOrder);
-  sheet.getRange(currentIndex + 2, 2).setValue(currentOrder);
-
-  return { success: true, message: 'Kategori berhasil dipindahkan ke bawah.' };
 }
 
 function addLink(kategori, judul, deskripsi, url, jenis) {
