@@ -300,12 +300,12 @@
         <table class="w-full text-sm">
           <thead class="bg-gradient-to-r from-slate-700 to-slate-800 text-white">
             <tr>
-              <th class="px-6 py-4 text-left">Format</th>
-              <th class="px-6 py-4 text-left">Nama File</th>
-              <th class="px-6 py-4 text-left">Kategori</th>
-              <th class="px-6 py-4 text-left">Keterangan</th>
-              <th class="px-6 py-4 text-left">Tanggal</th>
-              <th class="px-6 py-4 text-left">Aksi</th>
+              <th class="px-3 py-3 text-left">Format</th>
+              <th class="px-3 py-3 text-left">Nama File</th>
+              <th class="px-3 py-3 text-left">Kategori</th>
+              <th class="px-3 py-3 text-left">Keterangan</th>
+              <th class="px-3 py-3 text-left">Tanggal</th>
+              <th class="px-3 py-3 text-left">Aksi</th>
             </tr>
           </thead>
           <tbody id="archive-table-body" class="divide-y divide-slate-200 dark:divide-slate-700"></tbody>
@@ -965,15 +965,23 @@ function renderArchiveTable(data){
     const dl = downloadUrl(d.url);
     const label = getArchiveIcon(d.fileName);
 
+    let actions = '<div class="flex gap-1 items-center"><button onclick="openPreview(\'' + p + '\')" class="bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded-lg text-xs transition-colors">Preview</button>'
+      + '<a href="' + dl + '" class="bg-green-500 hover:bg-green-600 text-white px-2 py-1 rounded-lg text-xs transition-colors">Download</a>';
+    
+    if(currentUserRole === 'admin'){
+      actions += '<button onclick="deleteArchiveConfirm(event, \'' + d.id + '\', \'' + d.fileName.replace(/'/g, "\\\'" ) + '\')" class="w-7 h-7 rounded-full bg-red-500 hover:bg-red-600 text-white flex items-center justify-center transition-colors" title="Hapus"><svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"></path></svg></button>';
+    }
+    
+    actions += '</div>';
+
     return '<tr class="table-row">'
-      + '<td class="px-6 py-4"><span class="inline-flex items-center justify-center w-12 h-12 rounded-lg bg-slate-100 dark:bg-slate-700 text-xs font-bold text-slate-600 dark:text-slate-300">' + label + '</span></td>'
-      + '<td class="px-6 py-4">' + d.fileName + '</td>'
-      + '<td class="px-6 py-4">' + d.kategori + '</td>'
-      + '<td class="px-6 py-4">' + d.keterangan + '</td>'
-      + '<td class="px-6 py-4">' + d.timestamp + '</td>'
-      + '<td class="px-6 py-4">'
-      + '<button onclick="openPreview(\'' + p + '\')" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded-lg mr-2 transition-colors">Preview</button>'
-      + '<a href="' + dl + '" class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded-lg transition-colors">Download</a>'
+      + '<td class="px-3 py-2"><span class="inline-flex items-center justify-center w-10 h-10 rounded-lg bg-slate-100 dark:bg-slate-700 text-xs font-bold text-slate-600 dark:text-slate-300">' + label + '</span></td>'
+      + '<td class="px-3 py-2 text-xs">' + d.fileName + '</td>'
+      + '<td class="px-3 py-2 text-xs">' + d.kategori + '</td>'
+      + '<td class="px-3 py-2 text-xs align-center">' + d.keterangan + '</td>'
+      + '<td class="px-3 py-2 text-xs whitespace-nowrap align-center">' + d.timestamp + '</td>'
+      + '<td class="px-3 py-2 align-center">'
+      + actions
       + '</td></tr>';
   }).join('');
 
@@ -989,6 +997,36 @@ function onArchiveSearch(){
   });
 
   renderArchiveTable(filtered);
+}
+
+function deleteArchiveConfirm(evt, id, fileName){
+  if(!confirm('Hapus arsip "' + fileName + '"?\n\nTindakan ini tidak dapat dibatalkan.')) return;
+  
+  // Show loading state
+  const btn = evt.target.closest('button');
+  const originalHtml = btn.innerHTML;
+  btn.disabled = true;
+  btn.classList.add('opacity-50');
+  
+  if(typeof google !== 'undefined'){
+    google.script.run.withSuccessHandler(function(res){
+      btn.disabled = false;
+      btn.classList.remove('opacity-50');
+      btn.innerHTML = originalHtml;
+      
+      if(res && res.success){
+        showToast('success', 'Berhasil', res.message);
+        loadArchives();
+      } else {
+        showToast('error', 'Error', res.message || 'Gagal menghapus arsip');
+      }
+    }).withFailureHandler(function(error){
+      btn.disabled = false;
+      btn.classList.remove('opacity-50');
+      btn.innerHTML = originalHtml;
+      showToast('error', 'Error', 'Terjadi kesalahan: ' + error);
+    }).deleteArchive(id);
+  }
 }
 
 function loadCategories(){

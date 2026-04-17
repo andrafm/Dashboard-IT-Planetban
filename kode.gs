@@ -255,7 +255,7 @@ function getArchives() {
   for (let i = data.length - 1; i >= 1; i--) { 
      result.push({
        id: data[i][0],
-       timestamp: Utilities.formatDate(new Date(data[i][1]), "GMT+7", "dd/MM/yyyy HH:mm"),
+       timestamp: Utilities.formatDate(new Date(data[i][1]), "GMT+7", "dd/MM/yy HH:mm"),
        fileName: data[i][2],
        kategori: data[i][3],
        keterangan: data[i][4],
