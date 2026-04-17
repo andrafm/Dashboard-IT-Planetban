@@ -5,7 +5,7 @@ Dashboard IT adalah sistem manajemen arsip dan link berbasis Google Apps Script 
 ## 🔗 Akses Deploy
 Gunakan link berikut untuk mengakses aplikasi:
 
-https://script.google.com/macros/s/AKfycbwYSxxKqQUfCmDtNzk97XxG4KAaIxZSaiTINgSoJxZrOqbNPSHnq1QgptCC6QEmJS_v/exec
+https://script.google.com/macros/s/AKfycbxvttNyVrtp-JsJYPVZDXwvGnPR5j4dTCVDSOYE0uCdP6a2liwFq2y0oSQvou__1bDq/exec
 
 ## ✨ Fitur Utama
 - Upload file ke Google Drive berdasarkan kategori
@@ -26,7 +26,7 @@ https://script.google.com/macros/s/AKfycbwYSxxKqQUfCmDtNzk97XxG4KAaIxZSaiTINgSoJ
 Lihat `SETUP_GUIDE.md` untuk panduan lengkap instalasi dan troubleshooting.
 
 ## 📦 Versi
-`v2.3`
+`v2.4`
 
 ## 📌 Catatan
 - Pastikan Apps Script memiliki izin Google Drive penuh

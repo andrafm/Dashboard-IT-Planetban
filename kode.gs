@@ -705,6 +705,182 @@ function forceDeleteDashboardCategory(name) {
   }
 }
 
+function getDashboardTypes() {
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('DashboardTypes');
+  if (!sheet) return [];
+  const lastRow = sheet.getLastRow();
+  if (lastRow <= 1) return [];
+  const values = sheet.getRange(2, 1, lastRow - 1, 2).getValues();
+  const types = values.map(row => ({ name: row[0], order: row[1] || 999 })).sort((a, b) => a.order - b.order);
+  return types.map(type => type.name);
+}
+
+function addDashboardType(name) {
+  let sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('DashboardTypes');
+  if (!sheet) {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    sheet = ss.insertSheet('DashboardTypes');
+    sheet.appendRow(['Jenis Dashboard', 'Order']);
+  }
+
+  const lastRow = sheet.getLastRow();
+  const data = lastRow > 1 ? sheet.getRange(2, 1, lastRow - 1, 2).getValues() : [];
+  if (data.some(row => row[0] === name)) {
+    return { success: false, message: 'Jenis sudah ada!' };
+  }
+
+  const maxOrder = data.length ? Math.max(...data.map(row => row[1] || 0)) : 0;
+  sheet.appendRow([name, maxOrder + 1]);
+  return { success: true, message: 'Jenis berhasil ditambahkan!' };
+}
+
+function updateDashboardType(oldName, newName) {
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('DashboardTypes');
+  if (!sheet) return { success: false, message: 'Sheet jenis tidak ditemukan.' };
+
+  const values = sheet.getRange(2, 1, sheet.getLastRow() - 1, 1).getValues().flat();
+  if (values.includes(newName)) {
+    return { success: false, message: 'Jenis baru sudah ada.' };
+  }
+
+  const data = sheet.getDataRange().getValues();
+  let updated = false;
+  for (let i = 1; i < data.length; i++) {
+    if (data[i][0] === oldName) {
+      sheet.getRange(i + 1, 1).setValue(newName);
+      updated = true;
+      break;
+    }
+  }
+
+  if (!updated) return { success: false, message: 'Jenis tidak ditemukan.' };
+
+  // Update jenis di Links sheet
+  const linksSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Links');
+  if (linksSheet) {
+    const linksData = linksSheet.getDataRange().getValues();
+    for (let i = 1; i < linksData.length; i++) {
+      if (linksData[i][5] === oldName) { // Kolom jenis (index 5)
+        linksSheet.getRange(i + 1, 6).setValue(newName);
+      }
+    }
+  }
+
+  return { success: true, message: 'Jenis berhasil diperbarui!' };
+}
+
+function deleteDashboardType(name) {
+  try {
+    // Cek berapa link yang menggunakan jenis ini
+    const linksSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Links');
+    if (!linksSheet) {
+      return deleteDashboardTypeConfirmed(name);
+    }
+
+    const linksData = linksSheet.getDataRange().getValues();
+    let linkCount = 0;
+
+    // Cek dari baris kedua (skip header)
+    for (let i = 1; i < linksData.length; i++) {
+      if (linksData[i][5] === name) { // Kolom jenis (index 5)
+        linkCount++;
+      }
+    }
+
+    // Jika ada link, return info untuk konfirmasi
+    if (linkCount > 0) {
+      return {
+        success: false,
+        needsConfirmation: true,
+        message: 'Jenis "' + name + '" berisi ' + linkCount + ' link dashboard.',
+        linkCount: linkCount,
+        typeName: name
+      };
+    }
+
+    // Jika tidak ada link, hapus langsung
+    return deleteDashboardTypeConfirmed(name);
+  } catch (e) {
+    return { success: false, message: 'Gagal menghapus jenis: ' + e.toString() };
+  }
+}
+
+function deleteDashboardTypeConfirmed(name) {
+  try {
+    // Hapus jenis dari sheet DashboardTypes
+    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('DashboardTypes');
+    if (!sheet) return { success: false, message: 'Sheet jenis tidak ditemukan.' };
+
+    const data = sheet.getDataRange().getValues();
+    for (let i = 1; i < data.length; i++) {
+      if (data[i][0] === name) {
+        sheet.deleteRow(i + 1);
+
+        // Hapus semua link di jenis ini
+        const linksSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Links');
+        if (linksSheet) {
+          const linksData = linksSheet.getDataRange().getValues();
+
+          // Cari dan hapus dari bawah ke atas untuk menghindari index shifting
+          for (let j = linksData.length - 1; j >= 1; j--) {
+            if (linksData[j][5] === name) { // Kolom jenis (index 5)
+              linksSheet.deleteRow(j + 1);
+            }
+          }
+        }
+
+        return { success: true, message: 'Jenis "' + name + '" dan semua link di dalamnya berhasil dihapus!' };
+      }
+    }
+
+    return { success: false, message: 'Jenis tidak ditemukan.' };
+  } catch (e) {
+    return { success: false, message: 'Gagal menghapus jenis: ' + e.toString() };
+  }
+}
+
+function forceDeleteDashboardType(name) {
+  try {
+    Logger.log('Memulai force delete jenis dashboard: ' + name);
+
+    // 1. Hapus semua link yang menggunakan jenis ini
+    const linksSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Links');
+    let deletedLinks = 0;
+
+    if (linksSheet) {
+      const linksData = linksSheet.getDataRange().getValues();
+
+      // Cari dan hapus dari bawah ke atas untuk menghindari index shifting
+      for (let i = linksData.length - 1; i >= 1; i--) {
+        if (linksData[i][5] === name) { // Kolom jenis (index 5)
+          linksSheet.deleteRow(i + 1);
+          deletedLinks++;
+        }
+      }
+    }
+
+    // 2. Hapus jenis dari sheet DashboardTypes
+    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('DashboardTypes');
+    if (!sheet) return { success: false, message: 'Sheet jenis tidak ditemukan.' };
+
+    const data = sheet.getDataRange().getValues();
+    for (let i = 1; i < data.length; i++) {
+      if (data[i][0] === name) {
+        sheet.deleteRow(i + 1);
+        break;
+      }
+    }
+
+    return {
+      success: true,
+      message: 'Jenis dashboard "' + name + '" berhasil dihapus paksa!\n\nDihapus:\n• ' + deletedLinks + ' link dashboard\n• 1 jenis dashboard'
+    };
+  } catch (e) {
+    Logger.log('Error force delete dashboard type: ' + e.toString());
+    return { success: false, message: 'Gagal menghapus paksa jenis dashboard: ' + e.toString() };
+  }
+}
+
 function uploadFileToDrive(base64Data, fileName, kategori, deskripsi) {
   try {
     Logger.log('Starting upload for file: ' + fileName + ', category: ' + kategori);

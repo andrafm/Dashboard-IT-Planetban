@@ -233,6 +233,9 @@
           <button id="manage-dashboard-categories-btn" onclick="toggleManageDashboardCategories()" class="hidden flex-1 sm:flex-auto bg-slate-800 hover:bg-slate-900 text-white px-6 py-3 rounded-2xl font-semibold shadow-lg hover:shadow-xl transition-all">
             Kelola Kategori
           </button>
+          <button id="manage-dashboard-types-btn" onclick="toggleManageDashboardTypes()" class="hidden flex-1 sm:flex-auto bg-slate-800 hover:bg-slate-900 text-white px-6 py-3 rounded-2xl font-semibold shadow-lg hover:shadow-xl transition-all">
+            Kelola Jenis
+          </button>
           <button id="add-link-btn" onclick="showAddLinkForm()" class="hidden flex-1 sm:flex-auto bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-6 py-3 rounded-2xl font-semibold shadow-lg hover:shadow-xl transition-all">
             Tambah Link
           </button>
@@ -258,18 +261,32 @@
         </div>
       </div>
 
+      <!-- MANAGE DASHBOARD TYPES -->
+      <div id="manage-dashboard-types" class="hidden bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-xl mb-8">
+        <div class="flex justify-between items-center mb-6">
+          <div>
+            <h3 class="text-xl font-bold text-slate-800 dark:text-white">Kelola Jenis Dashboard</h3>
+            <p class="text-sm text-slate-500 dark:text-slate-400">Tambah, ubah, atau hapus jenis dashboard.</p>
+          </div>
+          <button onclick="toggleManageDashboardTypes()" class="text-slate-500 hover:text-slate-900 dark:hover:text-white">Tutup</button>
+        </div>
+        <div id="dashboard-type-list" class="space-y-3 mb-6"></div>
+        <div class="grid md:grid-cols-2 gap-4 items-end">
+          <input id="new-dashboard-type" placeholder="Jenis baru" class="w-full px-4 py-3 border border-slate-300 dark:border-slate-600 rounded-2xl bg-slate-50 dark:bg-slate-700 text-slate-800 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none">
+          <button id="add-dashboard-type-btn" onclick="addDashboardType()" class="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white px-6 py-3 rounded-2xl font-semibold shadow-lg hover:shadow-xl transition-all flex items-center">
+            <span id="add-dashboard-type-btn-text">Tambah Jenis</span>
+            <div id="add-dashboard-type-loader" class="hidden ml-2 w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+          </button>
+        </div>
+      </div>
+
       <!-- ADD LINK FORM (ADMIN ONLY) -->
       <div id="add-link-form" class="hidden bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-xl mb-8">
         <h3 class="text-xl font-bold mb-6 text-slate-800 dark:text-white">Tambah Link Dashboard</h3>
         <div class="grid md:grid-cols-2 gap-6 mb-6">
-          <select id="link-category" class="px-4 py-3 border border-slate-300 dark:border-slate-600 rounded-xl bg-slate-50 dark:bg-slate-700 text-slate-800 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none">
-            <option value="">Pilih Kategori</option>
+          <select id="link-category" required class="px-4 py-3 border border-slate-300 dark:border-slate-600 rounded-xl bg-slate-50 dark:bg-slate-700 text-slate-800 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none">
           </select>
-          <select id="link-type" class="px-4 py-3 border border-slate-300 dark:border-slate-600 rounded-xl bg-slate-50 dark:bg-slate-700 text-slate-800 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none">
-            <option value="">Pilih Jenis</option>
-            <option value="Spreadsheet">Spreadsheet</option>
-            <option value="Form">Form</option>
-            <option value="Tool">Tool</option>
+          <select id="link-type" required class="px-4 py-3 border border-slate-300 dark:border-slate-600 rounded-xl bg-slate-50 dark:bg-slate-700 text-slate-800 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none">
           </select>
         </div>
         <div class="mb-6">
@@ -391,8 +408,8 @@
 
   <!-- KANAN: ikut tinggi kiri -->
   <select id="file-category"
+  required
   class="w-full px-4 py-3 border border-slate-300 dark:border-slate-600 rounded-xl bg-slate-50 dark:bg-slate-700 text-slate-800 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none h-[48px]">
-  <option>Pilih Kategori</option>
 </select>
 
 </div>
@@ -453,6 +470,7 @@ let currentDashboardCategory = '';
 let currentArchives = [];
 let currentDashboardSearchTerm = '';
 let currentDashboardCategories = [];
+let currentDashboardTypes = [];
 const SESSION_KEY = 'itPanelSession';
 
 function el(id){ return document.getElementById(id); }
@@ -604,16 +622,19 @@ function setupLogin(username, role, skipSave) {
   if(role === 'admin'){
     el('add-link-btn').classList.remove('hidden');
     el('manage-dashboard-categories-btn').classList.remove('hidden');
+    el('manage-dashboard-types-btn').classList.remove('hidden');
     el('manage-categories-btn').classList.remove('hidden');
     el('diagnostic-btn').classList.remove('hidden');
   } else {
     el('add-link-btn').classList.add('hidden');
     el('manage-dashboard-categories-btn').classList.add('hidden');
+    el('manage-dashboard-types-btn').classList.add('hidden');
     el('manage-categories-btn').classList.add('hidden');
     el('diagnostic-btn').classList.add('hidden');
   }
 
   loadDashboardCategories();
+  loadDashboardTypes();
   loadCategories();
   switchView('view-dashboard');
 
@@ -766,6 +787,15 @@ function toggleManageDashboardCategories(){
   }
 }
 
+function toggleManageDashboardTypes(){
+  const panel = el('manage-dashboard-types');
+  if(panel.classList.contains('hidden')){
+    panel.classList.remove('hidden');
+  } else {
+    panel.classList.add('hidden');
+  }
+}
+
 function setDashboardCategory(category){
   currentDashboardCategory = category ? decodeURIComponent(category) : '';
   displayDashboardLinks(currentDashboardCategory);
@@ -877,12 +907,37 @@ function loadDashboardCategories(){
   }).getDashboardCategories();
 }
 
+function loadDashboardTypes(){
+  if(typeof google === 'undefined'){
+    const types = ['Spreadsheet','Form','Tool'];
+    currentDashboardTypes = types;
+    populateLinkTypeSelect(types);
+    renderDashboardTypeList(types);
+    return;
+  }
+
+  google.script.run.withSuccessHandler(function(types){
+    currentDashboardTypes = types;
+    populateLinkTypeSelect(types);
+    renderDashboardTypeList(types);
+  }).getDashboardTypes();
+}
+
 function populateLinkCategorySelect(categories){
   const select = el('link-category');
   if(!select) return;
-  select.innerHTML = '<option value="">Pilih Kategori</option>';
+  select.innerHTML = '';
   categories.forEach(function(cat){
     select.innerHTML += '<option value="' + cat + '">' + cat + '</option>';
+  });
+}
+
+function populateLinkTypeSelect(types){
+  const select = el('link-type');
+  if(!select) return;
+  select.innerHTML = '';
+  types.forEach(function(type){
+    select.innerHTML += '<option value="' + type + '">' + type + '</option>';
   });
 }
 
@@ -921,6 +976,29 @@ function renderDashboardCategoryList(categories){
   list.innerHTML = html;
 }
 
+function renderDashboardTypeList(types){
+  const list = el('dashboard-type-list');
+  if(!list) return;
+
+  if(!types.length){
+    list.innerHTML = '<div class="rounded-2xl bg-slate-50 dark:bg-slate-900 p-4 text-slate-500 dark:text-slate-400">Belum ada jenis dashboard.</div>';
+    return;
+  }
+
+  let html = '';
+  types.forEach(function(type, index){
+    const encoded = encodeURIComponent(type);
+    html += '<div class="flex items-center justify-between gap-4 rounded-2xl border border-slate-200 dark:border-slate-700 p-4">';
+    html += '<div class="text-slate-800 dark:text-white font-medium">' + type + '</div>';
+    html += '<div class="flex gap-2">';
+    html += '<button onclick="editDashboardType(\'' + encoded + '\')" class="px-3 py-2 rounded-2xl bg-slate-800 text-white text-sm hover:bg-slate-900 transition">Ubah</button>';
+    html += '<button onclick="removeDashboardType(\'' + encoded + '\')" class="px-3 py-2 rounded-2xl bg-red-500 text-white text-sm hover:bg-red-600 transition">Hapus</button>';
+    html += '<button onclick="forceDeleteDashboardTypeConfirm(\'' + encoded + '\')" class="px-3 py-2 rounded-2xl bg-red-800 text-white text-sm hover:bg-red-900 transition font-semibold">Hapus Paksa</button>';
+    html += '</div></div>';
+  });
+  list.innerHTML = html;
+}
+
 function addDashboardCategory(){
   const newCategory = el('new-dashboard-category').value.trim();
   if(!newCategory){
@@ -948,6 +1026,36 @@ function addDashboardCategory(){
         showToast('error', 'Error', res.message);
       }
     }).addDashboardCategory(newCategory);
+  }
+}
+
+function addDashboardType(){
+  const newType = el('new-dashboard-type').value.trim();
+  if(!newType){
+    showToast('error', 'Error', 'Nama jenis tidak boleh kosong!');
+    return;
+  }
+
+  // Show loading
+  el('add-dashboard-type-btn').disabled = true;
+  el('add-dashboard-type-btn-text').textContent = 'Menambahkan...';
+  el('add-dashboard-type-loader').classList.remove('hidden');
+
+  if(typeof google !== 'undefined'){
+    google.script.run.withSuccessHandler(function(res){
+      // Hide loading
+      el('add-dashboard-type-btn').disabled = false;
+      el('add-dashboard-type-btn-text').textContent = 'Tambah Jenis';
+      el('add-dashboard-type-loader').classList.add('hidden');
+
+      if(res.success){
+        el('new-dashboard-type').value = '';
+        loadDashboardTypes();
+        showToast('success', 'Berhasil', res.message);
+      } else {
+        showToast('error', 'Error', res.message);
+      }
+    }).addDashboardType(newType);
   }
 }
 
@@ -1030,6 +1138,87 @@ function forceDeleteDashboardCategoryConfirm(encodedCategory){
       showToast('error', 'Error', error.message);
     })
     .forceDeleteDashboardCategory(category);
+}
+
+function editDashboardType(encodedType){
+  const type = decodeURIComponent(encodedType);
+  const newType = prompt('Ubah jenis dashboard', type);
+  if(!newType || newType.trim() === type) return;
+
+  showLoading('Mengubah nama jenis dashboard...');
+  if(typeof google !== 'undefined'){
+    google.script.run.withSuccessHandler(function(res){
+      hideLoading();
+      if(res.success){
+        loadDashboardTypes();
+        showToast('success', 'Berhasil', res.message);
+      } else {
+        showToast('error', 'Error', res.message);
+      }
+    }).updateDashboardType(type, newType.trim());
+  }
+}
+
+function removeDashboardType(encodedType){
+  const type = decodeURIComponent(encodedType);
+  if(!confirm('Hapus jenis "' + type + '"?\n\n⚠️ Pastikan tidak ada link dashboard yang menggunakan jenis ini.')) return;
+
+  showLoading('Menghapus jenis dashboard...');
+  if(typeof google !== 'undefined'){
+    google.script.run.withSuccessHandler(function(res){
+      hideLoading();
+      if(res.success){
+        loadDashboardTypes();
+        showToast('success', 'Berhasil', res.message);
+      } else {
+        showToast('error', 'Error', res.message);
+      }
+    }).deleteDashboardType(type);
+  }
+}
+
+function forceDeleteDashboardTypeConfirm(encodedType){
+  const type = decodeURIComponent(encodedType);
+
+  const confirmed = confirm('⚠️ PERINGATAN: HAPUS PAKSA JENIS DASHBOARD ⚠️\n\n' +
+    'Anda akan menghapus jenis "' + type + '" beserta:\n' +
+    '• SEMUA link dashboard yang menggunakan jenis ini\n' +
+    '• Jenis dari daftar jenis dashboard\n\n' +
+    '❌ TINDAKAN INI TIDAK DAPAT DIBATALKAN!\n' +
+    '❌ DATA YANG DIHAPUS TIDAK BISA DIKEMBALIKAN!\n\n' +
+    'Apakah Anda YAKIN ingin melanjutkan?');
+
+  if(!confirmed){
+    return;
+  }
+
+  // Konfirmasi kedua untuk memastikan
+  const finalConfirm = prompt('KONFIRMASI AKHIR:\n\n' +
+    'Jenis Dashboard: "' + type + '"\n' +
+    'Akan dihapus SELURUHNYA beserta semua linknya.\n\n' +
+    'Ketik "HAPUS" (huruf besar) untuk mengonfirmasi:');
+
+  if(finalConfirm !== 'HAPUS'){
+    alert('Konfirmasi dibatalkan. Operasi hapus paksa tidak dilanjutkan.');
+    return;
+  }
+
+  showLoading('Menghapus paksa jenis dashboard dan semua linknya...');
+  google.script.run
+    .withSuccessHandler(function(result){
+      hideLoading();
+      if(result.success){
+        showToast('success', 'Berhasil', result.message);
+        loadDashboardTypes();
+      }else{
+        showToast('error', 'Gagal', result.message);
+      }
+    })
+    .withFailureHandler(function(error){
+      hideLoading();
+      showToast('error', 'Error', error.message);
+    })
+    .forceDeleteDashboardType(type);
 }
 
 /* NAV */
@@ -1194,7 +1383,7 @@ function loadCategories(){
 
   google.script.run.withSuccessHandler(function(categories){
     const select = el('file-category');
-    select.innerHTML = '<option>Pilih Kategori</option>';
+    select.innerHTML = '';
 
     categories.forEach(function(cat){
       select.innerHTML += '<option value="' + cat + '">' + cat + '</option>';
