@@ -112,6 +112,15 @@
   </div>
 </div>
 
+<!-- LOADING OVERLAY -->
+<div id="loading-overlay" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex items-center justify-center">
+  <div class="bg-white dark:bg-slate-800 rounded-2xl p-8 shadow-2xl flex flex-col items-center max-w-sm mx-4">
+    <div class="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+    <p class="text-slate-800 dark:text-white font-semibold text-center">Memproses...</p>
+    <p class="text-slate-500 dark:text-slate-400 text-sm text-center mt-2">Mohon tunggu sebentar</p>
+  </div>
+</div>
+
 <!-- APP -->
 <div id="app-container" class="hidden flex w-full">
 
@@ -317,6 +326,25 @@
     <div id="view-arsip-input" class="view-section hidden animate-fade-in">
       <h2 class="text-3xl font-bold mb-8 text-slate-800 dark:text-white">Input Arsip</h2>
 
+      <!-- MANAGE CATEGORIES (ADMIN ONLY) -->
+      <div id="manage-categories" class="hidden bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-xl mb-8">
+        <div class="flex justify-between items-center mb-6">
+          <div>
+            <h3 class="text-xl font-bold text-slate-800 dark:text-white">Kelola Kategori Arsip</h3>
+            <p class="text-sm text-slate-500 dark:text-slate-400">Tambah atau hapus kategori arsip.</p>
+          </div>
+          <button onclick="toggleManageCategories()" class="text-slate-500 hover:text-slate-900 dark:hover:text-white">Tutup</button>
+        </div>
+        <div id="categories-list" class="space-y-3 mb-6"></div>
+        <div class="grid md:grid-cols-2 gap-4 items-end">
+          <input id="new-category-input" placeholder="Kategori baru" class="w-full px-4 py-3 border border-slate-300 dark:border-slate-600 rounded-2xl bg-slate-50 dark:bg-slate-700 text-slate-800 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none">
+          <button id="add-new-category-btn" onclick="addNewCategory()" class="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white px-6 py-3 rounded-2xl font-semibold shadow-lg hover:shadow-xl transition-all flex items-center">
+            <span id="add-new-category-btn-text">Tambah Kategori</span>
+            <div id="add-new-category-loader" class="hidden ml-2 w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+          </button>
+        </div>
+      </div>
+
       <!-- ADD CATEGORY FORM (ADMIN ONLY) -->
       <div id="add-category-form" class="hidden bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-xl mb-8">
         <h3 class="text-xl font-bold mb-6 text-slate-800 dark:text-white">Tambah Kategori Baru</h3>
@@ -338,17 +366,36 @@
       <div class="bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-xl">
         <div class="flex justify-between items-center mb-6">
           <h3 class="text-xl font-bold text-slate-800 dark:text-white">Upload Arsip Baru</h3>
-          <button id="add-category-btn" onclick="showAddCategoryForm()" class="hidden bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white px-4 py-2 rounded-xl font-bold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all text-sm">
-            + Kategori
-          </button>
+          <div class="flex gap-2">
+            <button id="manage-categories-btn" onclick="toggleManageCategories()" class="hidden bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-4 py-2 rounded-xl font-bold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all text-sm">
+              Kelola Kategori
+            </button>
+            <button id="diagnostic-btn" onclick="runDiagnostic()" class="hidden bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white px-4 py-2 rounded-xl font-bold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all text-sm">
+              🔧 Diagnosa
+            </button>
+          </div>
         </div>
 
-        <div class="grid md:grid-cols-2 gap-6 mb-6">
-          <input id="file-name" placeholder="Nama File" class="px-4 py-3 border border-slate-300 dark:border-slate-600 rounded-xl bg-slate-50 dark:bg-slate-700 text-slate-800 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none">
-          <select id="file-category" class="px-4 py-3 border border-slate-300 dark:border-slate-600 rounded-xl bg-slate-50 dark:bg-slate-700 text-slate-800 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none">
-            <option>Pilih Kategori</option>
-          </select>
-        </div>
+        <div class="grid md:grid-cols-3 gap-6 mb-6 items-stretch">
+
+  <!-- KIRI: lebih lebar -->
+  <div class="md:col-span-2 flex flex-col">
+    <input id="file-name"
+      placeholder="Nama File (opsional)"
+      class="w-full flex-1 px-4 py-3 border border-slate-300 dark:border-slate-600 rounded-xl bg-slate-50 dark:bg-slate-700 text-slate-800 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none">
+
+    <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
+      Nama file akan menggunakan nama asli lengkap
+    </p>
+  </div>
+
+  <!-- KANAN: ikut tinggi kiri -->
+  <select id="file-category"
+  class="w-full px-4 py-3 border border-slate-300 dark:border-slate-600 rounded-xl bg-slate-50 dark:bg-slate-700 text-slate-800 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none h-[48px]">
+  <option>Pilih Kategori</option>
+</select>
+
+</div>
         <textarea id="file-desc" placeholder="Deskripsi" rows="4" class="w-full px-4 py-3 border border-slate-300 dark:border-slate-600 rounded-xl bg-slate-50 dark:bg-slate-700 text-slate-800 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none mb-6"></textarea>
         <input type="file" id="file-upload" class="mb-6">
 
@@ -410,6 +457,48 @@ const SESSION_KEY = 'itPanelSession';
 
 function el(id){ return document.getElementById(id); }
 
+/* LOADING HELPERS */
+function showLoading(message = 'Memproses...') {
+  const overlay = el('loading-overlay');
+  if (overlay) {
+    const messageEl = overlay.querySelector('p.font-semibold');
+    if (messageEl) messageEl.textContent = message;
+    overlay.classList.remove('hidden');
+    overlay.classList.add('flex');
+  }
+}
+
+function hideLoading() {
+  const overlay = el('loading-overlay');
+  if (overlay) {
+    overlay.classList.add('hidden');
+    overlay.classList.remove('flex');
+  }
+}
+
+/* PREVIEW FUNCTIONS */
+function openPreview(url) {
+  const modal = el('preview-modal');
+  const frame = el('preview-frame');
+  
+  if (modal && frame) {
+    frame.src = url;
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+  }
+}
+
+function closePreview() {
+  const modal = el('preview-modal');
+  const frame = el('preview-frame');
+  
+  if (modal && frame) {
+    frame.src = '';
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+  }
+}
+
 /* TOAST NOTIFICATIONS */
 function showToast(type, title, message) {
   const modal = el('notification-modal');
@@ -455,7 +544,8 @@ function showLogin(){
   el('login-error').classList.add('hidden');
   el('add-link-btn').classList.add('hidden');
   el('manage-dashboard-categories-btn').classList.add('hidden');
-  el('add-category-btn').classList.add('hidden');
+  el('manage-categories-btn').classList.add('hidden');
+  el('diagnostic-btn').classList.add('hidden');
   el('add-link-form').classList.add('hidden');
   el('manage-dashboard-categories').classList.add('hidden');
 }
@@ -514,11 +604,13 @@ function setupLogin(username, role, skipSave) {
   if(role === 'admin'){
     el('add-link-btn').classList.remove('hidden');
     el('manage-dashboard-categories-btn').classList.remove('hidden');
-    el('add-category-btn').classList.remove('hidden');
+    el('manage-categories-btn').classList.remove('hidden');
+    el('diagnostic-btn').classList.remove('hidden');
   } else {
     el('add-link-btn').classList.add('hidden');
     el('manage-dashboard-categories-btn').classList.add('hidden');
-    el('add-category-btn').classList.add('hidden');
+    el('manage-categories-btn').classList.add('hidden');
+    el('diagnostic-btn').classList.add('hidden');
   }
 
   loadDashboardCategories();
@@ -823,6 +915,7 @@ function renderDashboardCategoryList(categories){
     html += '<div class="flex gap-2">';
     html += '<button onclick="editDashboardCategory(\'' + encoded + '\')" class="px-3 py-2 rounded-2xl bg-slate-800 text-white text-sm hover:bg-slate-900 transition">Ubah</button>';
     html += '<button onclick="removeDashboardCategory(\'' + encoded + '\')" class="px-3 py-2 rounded-2xl bg-red-500 text-white text-sm hover:bg-red-600 transition">Hapus</button>';
+    html += '<button onclick="forceDeleteDashboardCategoryConfirm(\'' + encoded + '\')" class="px-3 py-2 rounded-2xl bg-red-800 text-white text-sm hover:bg-red-900 transition font-semibold">Hapus Paksa</button>';
     html += '</div></div>';
   });
   list.innerHTML = html;
@@ -863,8 +956,10 @@ function editDashboardCategory(encodedCategory){
   const newCategory = prompt('Ubah kategori dashboard', category);
   if(!newCategory || newCategory.trim() === category) return;
 
+  showLoading('Mengubah nama kategori dashboard...');
   if(typeof google !== 'undefined'){
     google.script.run.withSuccessHandler(function(res){
+      hideLoading();
       if(res.success){
         loadDashboardCategories();
         showToast('success', 'Berhasil', res.message);
@@ -877,10 +972,12 @@ function editDashboardCategory(encodedCategory){
 
 function removeDashboardCategory(encodedCategory){
   const category = decodeURIComponent(encodedCategory);
-  if(!confirm('Hapus kategori "' + category + '"?')) return;
+  if(!confirm('Hapus kategori "' + category + '"?\n\n⚠️ Pastikan tidak ada link dashboard yang menggunakan kategori ini.')) return;
 
+  showLoading('Menghapus kategori dashboard...');
   if(typeof google !== 'undefined'){
     google.script.run.withSuccessHandler(function(res){
+      hideLoading();
       if(res.success){
         loadDashboardCategories();
         showToast('success', 'Berhasil', res.message);
@@ -889,6 +986,50 @@ function removeDashboardCategory(encodedCategory){
       }
     }).deleteDashboardCategory(category);
   }
+}
+
+function forceDeleteDashboardCategoryConfirm(encodedCategory){
+  const category = decodeURIComponent(encodedCategory);
+
+  const confirmed = confirm('⚠️ PERINGATAN: HAPUS PAKSA KATEGORI DASHBOARD ⚠️\n\n' +
+    'Anda akan menghapus kategori "' + category + '" beserta:\n' +
+    '• SEMUA link dashboard yang menggunakan kategori ini\n' +
+    '• Kategori dari daftar kategori dashboard\n\n' +
+    '❌ TINDAKAN INI TIDAK DAPAT DIBATALKAN!\n' +
+    '❌ DATA YANG DIHAPUS TIDAK BISA DIKEMBALIKAN!\n\n' +
+    'Apakah Anda YAKIN ingin melanjutkan?');
+
+  if(!confirmed){
+    return;
+  }
+
+  // Konfirmasi kedua untuk memastikan
+  const finalConfirm = prompt('KONFIRMASI AKHIR:\n\n' +
+    'Kategori Dashboard: "' + category + '"\n' +
+    'Akan dihapus SELURUHNYA beserta semua linknya.\n\n' +
+    'Ketik "HAPUS" (huruf besar) untuk mengonfirmasi:');
+
+  if(finalConfirm !== 'HAPUS'){
+    alert('Konfirmasi dibatalkan. Operasi hapus paksa tidak dilanjutkan.');
+    return;
+  }
+
+  showLoading('Menghapus paksa kategori dashboard dan semua linknya...');
+  google.script.run
+    .withSuccessHandler(function(result){
+      hideLoading();
+      if(result.success){
+        showToast('success', 'Berhasil', result.message);
+        loadDashboardCategories();
+      }else{
+        showToast('error', 'Gagal', result.message);
+      }
+    })
+    .withFailureHandler(function(error){
+      hideLoading();
+      showToast('error', 'Error', error.message);
+    })
+    .forceDeleteDashboardCategory(category);
 }
 
 /* NAV */
@@ -928,25 +1069,44 @@ function downloadUrl(url){
 }
 
 /* ARSIP */
-function getArchiveIcon(fileName){
-  const ext = fileName.split('.').pop().toLowerCase();
-  switch(ext){
-    case 'pdf': return 'PDF';
-    case 'xls':
-    case 'xlsx': return 'XLS';
-    case 'doc':
-    case 'docx': return 'DOC';
-    case 'ppt':
-    case 'pptx': return 'PPT';
-    case 'zip':
-    case 'rar':
-    case '7z': return 'ZIP';
-    case 'png':
-    case 'jpg':
-    case 'jpeg':
-    case 'gif': return 'IMG';
-    case 'txt': return 'TXT';
-    default: return 'FILE';
+function getArchiveIcon(mimeType){
+  // Deteksi berdasarkan MIME type yang sebenarnya
+  switch(mimeType){
+    case 'application/pdf':
+      return 'PDF';
+    case 'application/vnd.ms-excel':
+    case 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet':
+      return 'XLS';
+    case 'application/msword':
+    case 'application/vnd.openxmlformats-officedocument.wordprocessingml.document':
+      return 'DOC';
+    case 'application/vnd.ms-powerpoint':
+    case 'application/vnd.openxmlformats-officedocument.presentationml.presentation':
+      return 'PPT';
+    case 'application/zip':
+    case 'application/x-rar-compressed':
+    case 'application/x-7z-compressed':
+      return 'ZIP';
+    case 'image/png':
+    case 'image/jpeg':
+    case 'image/jpg':
+    case 'image/gif':
+    case 'image/webp':
+    case 'image/bmp':
+      return 'IMG';
+    case 'text/plain':
+      return 'TXT';
+    case 'video/mp4':
+    case 'video/avi':
+    case 'video/mov':
+    case 'video/wmv':
+      return 'VID';
+    case 'audio/mp3':
+    case 'audio/wav':
+    case 'audio/m4a':
+      return 'AUD';
+    default:
+      return 'FILE';
   }
 }
 
@@ -963,7 +1123,7 @@ function renderArchiveTable(data){
   const html = data.map(function(d){
     const p = previewUrl(d.url);
     const dl = downloadUrl(d.url);
-    const label = getArchiveIcon(d.fileName);
+    const label = getArchiveIcon(d.mimeType);
 
     let actions = '<div class="flex gap-1 items-center"><button onclick="openPreview(\'' + p + '\')" class="bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded-lg text-xs transition-colors">Preview</button>'
       + '<a href="' + dl + '" class="bg-green-500 hover:bg-green-600 text-white px-2 py-1 rounded-lg text-xs transition-colors">Download</a>';
@@ -1042,18 +1202,53 @@ function loadCategories(){
   }).getCategories();
 }
 
-/* CATEGORY MANAGEMENT */
-function showAddCategoryForm(){
-  el('add-category-form').classList.remove('hidden');
+function toggleManageCategories(){
+  const panel = el('manage-categories');
+  if(panel.classList.contains('hidden')){
+    panel.classList.remove('hidden');
+    loadCategoriesList();
+  } else {
+    panel.classList.add('hidden');
+  }
 }
 
-function hideAddCategoryForm(){
-  el('add-category-form').classList.add('hidden');
-  el('new-category-name').value = '';
+function loadCategoriesList(){
+  if(typeof google === 'undefined'){
+    // Mock data for testing
+    const mockCategories = ['IM', 'IK', 'Form', 'Memo'];
+    renderCategoriesList(mockCategories);
+    return;
+  }
+
+  google.script.run.withSuccessHandler(function(categories){
+    renderCategoriesList(categories);
+  }).getCategories();
 }
 
-function addCategory(){
-  const categoryName = el('new-category-name').value.trim();
+function renderCategoriesList(categories){
+  const list = el('categories-list');
+  if(!list) return;
+
+  if(!categories.length){
+    list.innerHTML = '<div class="rounded-2xl bg-slate-50 dark:bg-slate-900 p-4 text-slate-500 dark:text-slate-400">Belum ada kategori arsip.</div>';
+    return;
+  }
+
+  let html = '';
+  categories.forEach(function(cat){
+    html += '<div class="flex items-center justify-between gap-4 rounded-2xl border border-slate-200 dark:border-slate-700 p-4">';
+    html += '<div class="text-slate-800 dark:text-white font-medium">' + cat + '</div>';
+    html += '<div class="flex gap-2">';
+    html += '<button onclick="editCategory(\'' + cat.replace(/'/g, "\\'") + '\')" class="px-3 py-2 rounded-2xl bg-blue-500 text-white text-sm hover:bg-blue-600 transition">Edit</button>';
+    html += '<button onclick="deleteCategoryConfirm(\'' + cat.replace(/'/g, "\\'") + '\')" class="px-3 py-2 rounded-2xl bg-red-500 text-white text-sm hover:bg-red-600 transition">Hapus</button>';
+    html += '<button onclick="forceDeleteCategoryConfirm(\'' + cat.replace(/'/g, "\\'") + '\')" class="px-3 py-2 rounded-2xl bg-red-800 text-white text-sm hover:bg-red-900 transition font-semibold">Hapus Paksa</button>';
+    html += '</div></div>';
+  });
+  list.innerHTML = html;
+}
+
+function addNewCategory(){
+  const categoryName = el('new-category-input').value.trim();
 
   if(!categoryName){
     showToast('error', 'Error', 'Nama kategori tidak boleh kosong!');
@@ -1061,22 +1256,110 @@ function addCategory(){
   }
 
   // Show loading
-  el('add-category-btn-save').disabled = true;
-  el('add-category-btn-text').textContent = 'Menambahkan...';
-  el('add-category-loader').classList.remove('hidden');
+  el('add-new-category-btn').disabled = true;
+  el('add-new-category-btn-text').textContent = 'Menambahkan...';
+  el('add-new-category-loader').classList.remove('hidden');
 
   if(typeof google !== 'undefined'){
-    google.script.run.withSuccessHandler(function(){
+    google.script.run.withSuccessHandler(function(res){
       // Hide loading
-      el('add-category-btn-save').disabled = false;
-      el('add-category-btn-text').textContent = 'Tambah Kategori';
-      el('add-category-loader').classList.add('hidden');
+      el('add-new-category-btn').disabled = false;
+      el('add-new-category-btn-text').textContent = 'Tambah Kategori';
+      el('add-new-category-loader').classList.add('hidden');
 
-      hideAddCategoryForm();
-      loadCategories();
-      showToast('success', 'Berhasil', 'Kategori berhasil ditambahkan!');
+      if(res.success){
+        el('new-category-input').value = '';
+        loadCategoriesList();
+        loadCategories(); // Reload dropdown
+        showToast('success', 'Berhasil', res.message);
+      } else {
+        showToast('error', 'Error', res.message);
+      }
     }).addCategory(categoryName);
   }
+}
+
+function deleteCategoryConfirm(categoryName){
+  if(!confirm('Hapus kategori "' + categoryName + '"?\n\n⚠️ Pastikan tidak ada file arsip yang menggunakan kategori ini.')) return;
+
+  showLoading('Menghapus kategori...');
+  if(typeof google !== 'undefined'){
+    google.script.run.withSuccessHandler(function(res){
+      hideLoading();
+      if(res.success){
+        loadCategoriesList();
+        loadCategories(); // Reload dropdown
+        showToast('success', 'Berhasil', res.message);
+      } else {
+        showToast('error', 'Error', res.message);
+      }
+    }).deleteCategory(categoryName);
+  }
+}
+
+function editCategory(categoryName){
+  const newName = prompt('Masukkan nama kategori baru:', categoryName);
+  if(!newName || newName.trim() === '' || newName.trim() === categoryName){
+    return;
+  }
+
+  showLoading('Mengubah nama kategori...');
+  if(typeof google !== 'undefined'){
+    google.script.run.withSuccessHandler(function(res){
+      hideLoading();
+      if(res.success){
+        loadCategoriesList();
+        loadCategories(); // Reload dropdown
+        showToast('success', 'Berhasil', 'Kategori berhasil diubah');
+      } else {
+        showToast('error', 'Error', res.message);
+      }
+    }).updateCategory(categoryName, newName.trim());
+  }
+}
+
+function forceDeleteCategoryConfirm(categoryName){
+  const confirmed = confirm('⚠️ PERINGATAN: HAPUS PAKSA KATEGORI ⚠️\n\n' +
+    'Anda akan menghapus kategori "' + categoryName + '" beserta:\n' +
+    '• SEMUA file yang ada di dalam kategori ini\n' +
+    '• SEMUA record database terkait\n' +
+    '• Folder kategori di Google Drive\n\n' +
+    '❌ TINDAKAN INI TIDAK DAPAT DIBATALKAN!\n' +
+    '❌ DATA YANG DIHAPUS TIDAK BISA DIKEMBALIKAN!\n\n' +
+    'Apakah Anda YAKIN ingin melanjutkan?');
+
+  if(!confirmed){
+    return;
+  }
+
+  // Konfirmasi kedua untuk memastikan
+  const finalConfirm = prompt('KONFIRMASI AKHIR:\n\n' +
+    'Kategori: "' + categoryName + '"\n' +
+    'Akan dihapus SELURUHNYA beserta isinya.\n\n' +
+    'Ketik "HAPUS" (huruf besar) untuk mengonfirmasi:');
+
+  if(finalConfirm !== 'HAPUS'){
+    alert('Konfirmasi dibatalkan. Operasi hapus paksa tidak dilanjutkan.');
+    return;
+  }
+
+  showLoading('Menghapus paksa kategori dan semua isinya...');
+  google.script.run
+    .withSuccessHandler(function(result){
+      hideLoading();
+      if(result.success){
+        showToast('success', 'Berhasil', result.message);
+        loadCategoriesList();
+        loadCategories(); // Reload dropdown
+      }else{
+        showToast('error', 'Gagal', result.message);
+      }
+    })
+    .withFailureHandler(function(error){
+      hideLoading();
+      showToast('error', 'Error', error.message);
+    })
+    .forceDeleteCategory(categoryName);
 }
 
 /* UPLOAD */
@@ -1095,6 +1378,26 @@ function handleUpload(){
   const reader = new FileReader();
 
   reader.onload = function(e){
+    // Gunakan nama file asli lengkap, atau input user jika disediakan
+    let fileName = el('file-name').value.trim();
+    if (!fileName) {
+      // Jika tidak ada input user, gunakan nama file asli
+      fileName = file.name;
+    } else {
+      // Jika ada input user, tetap gunakan nama file asli untuk konsistensi
+      // Tapi catat input user sebagai deskripsi tambahan
+      const userInput = fileName;
+      fileName = file.name;
+
+      // Gabungkan input user ke deskripsi jika belum ada
+      const currentDesc = el('file-desc').value.trim();
+      if (!currentDesc) {
+        el('file-desc').value = userInput;
+      } else if (!currentDesc.includes(userInput)) {
+        el('file-desc').value = userInput + ' - ' + currentDesc;
+      }
+    }
+
     google.script.run.withSuccessHandler(function(res){
       // Hide loading
       el('upload-btn').disabled = false;
@@ -1114,7 +1417,7 @@ function handleUpload(){
       }
     }).uploadFileToDrive(
       e.target.result,
-      el('file-name').value || file.name,
+      fileName,
       el('file-category').value || 'General',
       el('file-desc').value
     );
@@ -1123,16 +1426,53 @@ function handleUpload(){
   reader.readAsDataURL(file);
 }
 
-/* PREVIEW */
-function openPreview(url){
-  el('preview-frame').src = url;
-  el('preview-modal').classList.remove('hidden');
-  el('preview-modal').classList.add('flex');
-}
-
-function closePreview(){
-  el('preview-frame').src='';
-  el('preview-modal').classList.add('hidden');
+/* DIAGNOSTIC */
+function runDiagnostic(){
+  if(!confirm('Jalankan diagnosa sistem?\n\nIni akan memeriksa:\n- Akses Google Drive\n- Permission Apps Script\n- Record arsip yang hilang')) return;
+  
+  // Show loading state
+  const btn = el('diagnostic-btn');
+  const originalText = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = '<div class="flex items-center"><div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>Mendiagnosa...</div>';
+  
+  showToast('info', 'Diagnosa Dimulai', 'Memeriksa sistem...');
+  
+  if(typeof google !== 'undefined'){
+    // Test Drive access
+    google.script.run.withSuccessHandler(function(driveResult){
+      if(driveResult.success){
+        showToast('success', 'Drive OK', driveResult.message);
+        
+        // Test repair missing archives
+        google.script.run.withSuccessHandler(function(repairResult){
+          // Hide loading state
+          btn.disabled = false;
+          btn.innerHTML = originalText;
+          
+          if(repairResult.success){
+            showToast('success', 'Perbaikan Selesai', repairResult.message);
+            loadArchives(); // Refresh daftar arsip
+          } else {
+            showToast('error', 'Perbaikan Gagal', repairResult.message);
+          }
+        }).repairMissingArchives();
+        
+      } else {
+        // Hide loading state
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+        
+        showToast('error', 'Drive Error', driveResult.message);
+      }
+    }).testDriveAccess();
+  } else {
+    // Hide loading state
+    btn.disabled = false;
+    btn.innerHTML = originalText;
+    
+    showToast('error', 'Error', 'Google Apps Script tidak tersedia');
+  }
 }
 
 window.addEventListener('DOMContentLoaded', initApp);
